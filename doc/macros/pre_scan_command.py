@@ -14,7 +14,7 @@ def pre_scan_command():
 
     This can be used to customize checks for intensity, etc.
 
-    Notes:
+    Note:
       1. Consult Matt and Tony before modifying!
       2. Most detectors have their own `pre_scan` and
          `post_scan` functions, too, and so shouldn't need

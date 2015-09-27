@@ -12,24 +12,8 @@ executed one at a time from the command line, or run in a script.
 
 .. module:: macrocode
 
-Running Scans
-=======================================
 
-There are several commands for running scans from the command line or from
-a script.
 
-.. module:: scanning
-   :synopsis: commands for scanning
-
-.. autofunction:: pos_scan
-.. autofunction:: pos_map
-
-.. autofunction:: pre_scan_command
-.. autofunction:: xafs_grid
-.. autofunction:: loop_map
-.. autofunction:: line_scan
-.. autofunction:: redox_map
-.. autofunction:: xrd_map
 
 Moving the Sample Stage
 =======================================
@@ -39,12 +23,13 @@ Several commands allow you to move the sample to a desired location<.
 .. module:: samplestage
    :synopsis: commands for moving the sample
 
-.. autofunction:: move_fine
 
 .. autofunction:: move_samplestage
 
+.. autofunction:: move_fine
 
-Moving The Monochromator Energy
+
+Moving the Monochromator Energy
 =======================================
 
 There are a couple general-purpose commands for moving the monochromator energy
@@ -60,7 +45,17 @@ beam intensity.
 
 .. autofunction:: move_to_edge
 
+.. autofunction:: mirror_stripe
 
+.. autofunction:: bpm_foil
+
+
+Custom Energy Commands
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Several custom commands wrap these, to give experiment-specific commands.
+Since these can change for each experiment, please consult Matt or Tony
+before using them!
 
 .. autofunction::  move_to_s
 .. autofunction::  move_to_ti
@@ -82,3 +77,68 @@ beam intensity.
 .. autofunction::  move_to_map
 
 .. autofunction::  move_to_xrd
+
+
+Running Scans
+=======================================
+
+There are several commands for running scans from the command line or from
+a script.
+
+.. module:: scanning
+   :synopsis: commands for scanning
+
+.. autofunction:: pos_scan
+.. autofunction:: pos_map
+
+.. autofunction:: line_scan
+.. autofunction:: grid_scan
+.. autofunction:: redox_map
+.. autofunction:: grid_xrd
+
+
+
+X-ray Diffraction Commands
+=======================================
+
+.. automodule:: xrd
+
+.. autofunction:: save_xrd
+.. autofunction:: save_xrd_pe
+.. autofunction:: save_xrd_marccd
+.. autofunction:: xrd_bgr
+
+
+Commands to Control X-ray beam intensity
+===========================================
+
+.. automodule:: intensity
+
+.. autofunction:: set_mono_tilt
+.. autofunction:: optimize_id
+
+.. autofunction:: feedback_off
+.. autofunction:: collect_offsets
+.. autofunction:: set_SRSgain
+.. autofunction:: set_i1amp_gain
+.. autofunction:: set_i0amp_gain
+.. autofunction:: autoset_gain
+.. autofunction:: autoset_i0amp_gain
+.. autofunction:: autoset_i1amp_gain
+.. autofunction:: autoset_i2amp_gain
+
+
+The Pre-Scan Command
+=======================================
+
+.. automodule:: pre_scan_command
+
+.. autofunction:: pre_scan_command
+
+
+
+Other Commands
+=======================================
+
+.. module:: common
+   :synopsis: miscellaneous commands

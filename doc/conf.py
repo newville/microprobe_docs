@@ -10,6 +10,7 @@ import sys, os
 #sys.path.append(os.path.abspath('.'))
 
 sys.path.append(os.path.abspath(os.path.join('..', 'lib')))
+
 sys.path.insert(0, 'macrocode')
 
 ## sys.path.append(os.path.abspath(os.path.join('.', 'ext')))
@@ -18,14 +19,13 @@ sys.path.insert(0, 'macrocode')
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 
+extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.pngmath',
               'sphinx.ext.linkcode',
               'sphinx.ext.napoleon',
               'numpydoc']
 
 def linkcode_resolve(domain, info):
-    print(" Linkcode ", domain, info)
     if domain != 'py':
         return None
     mname = info.get('module', '')

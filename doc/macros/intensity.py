@@ -1,20 +1,21 @@
-##
-## Macros for setting intensities and Ion Chamber gains
-##
-
+"""
+Commands for setting intensities and Ion Chamber gains
+"""
 
 def feedback_off():
-    """Turn intensity feedback off
+    """
+    Turn intensity feedback off
     """
     caput('13IDA:efast_pitch_pid.FBON', 0)
     caput('13IDA:efast_roll_pid.FBON', 0)
 #enddef
 
 def optimize_id():
-    """Optimize undulator by scanning ID energy and
+    """
+    Optimize undulator by scanning ID energy and
     finding highest I0 intensity
 
-    Examples:
+    Example:
         optimize_id()
     """
 
@@ -42,9 +43,10 @@ def optimize_id():
 
 
 def collect_offsets(t=10):
-    """Collect dark-current offsets for Ion chameber scalers
+    """
+    Collect dark-current offsets for Ion chameber scalers
 
-    Args:
+    Parameters:
         t (float):  time in seconds to count dark current for (default 10)
 
     Examples:
@@ -79,9 +81,10 @@ def collect_offsets(t=10):
 #enddef
 
 def set_SRSgain(sens, unit, prefix='13IDE:A1', offset=100):
-    """set pre-amplifier sensitivity, units, and offset
+    """
+    set pre-amplifier sensitivity, units, and offset
 
-    Args:
+    Parameters:
         sens (int):  Number for sensitivity.
             One of (1, 2, 5, 10, 20, 50, 100, 200, 500).
         units (string): Unit sring.
@@ -89,8 +92,7 @@ def set_SRSgain(sens, unit, prefix='13IDE:A1', offset=100):
         prefix (string): PV prefix for SRS570 amplifier [default '13IIDE:A1']
         offset (float):  Input current offset for amplifier [default 100]
 
-    Examples:
-
+    Example:
        set_SRSgain(100, 'nA/V', prefix='13IDE:A2', offset=105)
 
     """
@@ -114,10 +116,10 @@ def set_SRSgain(sens, unit, prefix='13IDE:A1', offset=100):
 #enddef
 
 def set_i1amp_gain(sens, unit, offset=100):
-    """set I1 pre-amplifier sensitivity, units, and offset
+    """
+    set I1 pre-amplifier sensitivity, units, and offset
 
-
-    Args:
+    Parameters:
         sens (int):  Number for sensitivity.
             One of (1, 2, 5, 10, 20, 50, 100, 200, 500).
         units (string): Unit sring.
@@ -132,9 +134,10 @@ def set_i1amp_gain(sens, unit, offset=100):
 #enddef
 
 def set_i0amp_gain(sens, unit, offset=100):
-    """set I0 pre-amplifier sensitivity, units, and offset
+    """
+    set I0 pre-amplifier sensitivity, units, and offset
 
-    Args:
+    Parameters:
         sens (int):  Number for sensitivity.
             One of (1, 2, 5, 10, 20, 50, 100, 200, 500).
         units (string): Unit sring.
@@ -154,14 +157,13 @@ def autoset_gain(prefix='13IDE:A1', scaler='13IDE:scaler1.S2', offset=100, count
     """
     automatically set i0 gain to be in range
 
-    Args:
+    Parameters:
        prefix (string): PV name for SRS570.
        scaler (string): PV name for scaler reading to use for reading intensity.
        offset (float):  Scaler offset value to use (default 100).
        count (int):     Recursion count to avoid infinite loop.
 
     Returns:
-    -------
        success (True or False): whether setting the gain succeeded.
     """
 
@@ -242,21 +244,20 @@ def autoset_i2amp_gain():
 #enddef
 
 def find_max_intensity(readpv, drivepv, vals, minval=0.1):
-    """find a max in an intensity while sweeping through an
+    """
+    find a max in an intensity while sweeping through an
     array of drive values,  around a current position, and
     move to the position with max intensity.
 
-    Parameters
-    ----------
-    readpv:   PV for reading intensity
-    drivepv:  PV for driving positions
-    vals:     array of RELATIVE positions (from current value)
-    minval:   minimum acceptable intensity [defualt = 0.1]
+    Parameters:
+        readpv (string):   PV for reading intensity
+        drivepv (string):  PV for driving positions
+        vals (array of floats):  array of **RELATIVE** positions (from current value)
+        minval (float):   minimum acceptable intensity [defualt = 0.1]
 
-    Notes:
-    -------
-     if the best intensity is below minval, the position is
-     moved back to the original position.
+    Note:
+       if the best intensity is below minval, the position is
+       moved back to the original position.
 
     """
     _orig = _best = caget(drivepv)
@@ -276,24 +277,22 @@ def find_max_intensity(readpv, drivepv, vals, minval=0.1):
 #enddef
 
 def set_mono_tilt(enable_fb_roll=True, enable_fb_pitch=False):
-    """Adjust IDE monochromator 2nd crystal tilt and roll
-    to maximize intensity.
-
-    Parameters
-    ----------
-    enable_fb_roll:  True (default) or False:
-                     enable roll feedback after best position is found.
-    enable_fb_pitch: True or False (default):
-                     enable pitch feedback after best position is found.
-
-    Notes:
-    -------
-     This works by
-        1. adjusting pitch to maximize intensity at BPM
-        2. adjusting roll to maximize intensity at I0 Ion Chamber
-        3. adjusting pitch to maximize intensity at I0 Ion Chamber
     """
+    Adjust IDE monochromator 2nd crystal tilt and roll to maximize intensity.
 
+    Parameters:
+        enable_fb_roll (True or False): enable roll feedback after
+               best position is found. [True]
+        enable_fb_pitch (True or False): enable pitch feedback after
+               best position is found. [False]
+
+    Note:
+        This works by
+            1. adjusting pitch to maximize intensity at BPM
+            2. adjusting roll to maximize intensity at I0 Ion Chamber
+            3. adjusting pitch to maximize intensity at I0 Ion Chamber
+
+    """
     print 'Set Mono Tilt 24-Sep-2015'
     with_roll = True
     tilt_pv = '13IDA:DAC1_7.VAL'

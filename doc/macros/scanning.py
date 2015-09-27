@@ -1,192 +1,233 @@
-##
-## Macros for scanning
-##
+"""
+Scanning Commands
 
-def pre_scan_command(scan=None):
-  """function run prior to each real scan"""
-  print 'This is pre_scan_command(), last updated 24-Sep-2015'
-  sleep(1)
+    pos_scan: move to a Named Position, run a Scan
+    pos_map
 
-  # Step 1: restart QE2
-  caput('13IDA:QE2:Acquire', 0)
-  sleep(0.5)
-  caput('13IDA:QE2:Acquire', 1)
+"""
 
-  i0_flux = float(caget('13XRM:ION:FluxOut'))
-  i0_llim = float(caget('13XRM:ION:FluxLowLimit'))
+def pos_scan(posname, scanname, datafile=None, number=1):
+    """
+    move sample to a Named Position from SampleStage Positions list
+    and run a scan defined from EpicsScan
 
-  # Step 2: if flux is low, wait, tweak energy
-  if (i0_flux < i0_llim):
-     t0 = systime()
-     energy_tweaked = False
-     energy = caget('13IDE:En:Energy')
-     while i0_flux < i0_llim and (systime()-t0) < 30.0:
-         sleep(0.250)
-         i0_flux = float(caget('13XRM:ION:FluxOut'))
-         i0_llim = float(caget('13XRM:ION:FluxLowLimit'))
-         # may need to tweak the energy (ID may be wrong)
-         if (systime() - t0) > 15.0 and not energy_tweaked:
-             energy_tweaked = True
-             caput('13IDE:En:Energy', energy + 0.1)
-         #endif
-         if check_scan_abort():  return
-     #endwhile
-  #endif
+    Parameters:
+        posname  (string): Name of Position from SampleStage position list.
+        scanname (string): Name of Scan, as defined and saved from EpicsScan.
+        datafile (string or None): Name of datafile to write [default=None]
+            if None, datafile will be '<scanname>_<pos>.001'
+        number (integer): number of repeats of scan to do [default=1]
 
-  # Step 3: if flux is still low, set mono tilt
-  if (i0_flux < i0_llim):
-     print("I0 Flux = %.4g too low, setting mono tilt" % i0_flux)
-     set_mono_tilt()
-     if check_scan_abort():  return
-  #endif
+    Example:
+       pos_scan('MySample', 'Fe_XANES', number=3)
 
-  # Step 4: longer wait, as if beam dumped
-  WAIT_TIME = 4*3600.0
-
-  i0_flux = float(caget('13XRM:ION:FluxOut'))
-  i0_llim = float(caget('13XRM:ION:FluxLowLimit'))
-  t0 = t0en = systime()
-  energy = caget('13IDE:En:Energy')
-  en_off = 0
-
-  if (i0_flux < i0_llim):
-     print(" I0 flux too low, waiting (hit Abort to cancel)")
-  #endif
-  while i0_flux < i0_llim and systime()-t0 < WAIT_TIME:
-     sleep(1.0)
-     i0_flux = float(caget('13XRM:ION:FluxOut'))
-     i0_llim = float(caget('13XRM:ION:FluxLowLimit'))
-     # may need to tweak the energy (ID may be wrong)
-     if (systime() - t0en) > 120.0:
-         t0en = systime()
-         en_off  += 0.1
-         if en_off > 1.02: en_off = -1.0
-         caput('13IDE:En:Energy', energy + en_off)
-     #endif
-     if check_scan_abort():  return
-  #endwhile
-
-  return None
-
-#enddef
-
-def pos_scan(pos, scanfile, datafile=None, number=1):
-    "pos_scan('MySample', 'Fe_XANES', number=3) "
-    move_samplestage(pos, wait=True)
+    """
+    move_samplestage(posname, wait=True)
     sleep(1.0)
     if datafile is None:
-        datafile = '%s_%s.001' % (scanfile, pos)
+        datafile = '%s_%s.001' % (scanname, posname)
     #endif
-    do_scan(scanfile,  filename=datafile, nscans=number)
+    do_scan(scanname,  filename=datafile, nscans=number)
 #enddef
 
-def pos_map(pos, mapname):
-    "pos_map('MySample', 'MyMap')"
-    move_samplestage(pos, wait=True)
-    sleep(1.0)
-    datafile = '%s_%s.001' % (mapname, pos)
-    do_slewscan(mapname, filename=datafile)
-#enddef
-
-
-def xafs_grid(scan_name, name=None, xstart=0, xstop=0.1, xstep=0.001, ystart=0, ystop=0.1, ystep=0.001):
-    """ do xafs scan at each point in a grid
+def pos_map(posname, scanname):
     """
-    # move_samplestage(pos_name, wait=True)
-    #sleep(1.0)
+    move to a Named Position from SampleStage Positions list
+    and run a slewscan map named in EpicsScan
 
-    datafile= scan_name
-    if name is not None:
-        datafile = '%s_%s' % (name, scan_name)
+    Parameters:
+        posname (string):  Name of Position from SampleStage position list.
+        scanname (string): Name of Scan, as defined and saved from EpicsScan.
+
+    Example:
+       pos_map('MySample', 'MyMap')
+    """
+
+    move_samplestage(posname, wait=True)
+    sleep(1.0)
+    datafile = '%s_%s.001' % (scanname, posname)
+    do_slewscan(scanname, filename=datafile, number=1)
+#enddef
+
+
+def _getPV(mname):
+    """
+    get PV name for a motor description.
+    expected to be used internally.
+
+    Parameters:
+        mname (string): name of motor or other PV that can be scanned
+
+    Returns:
+        PVname (string) for motor, or None if not found in known names
+
+    Example:
+        xpv = _get_motorPV('x')
+
+    Note:
+        known names are:
+           'x' or 'finex' : sample fine X stage
+           'y' or 'finey' : sample fine Y stage
+           'z'            : sample Z (focus) stage
+           'coarsex'      : sample coarse X stage
+           'coarsey'      : sample coarse Y stage
+           'energy'       : monochromator energy
+    """
+
+    known = {'x':       '13XRM:m1.VAL',    'finex':   '13XRM:m1.VAL',
+             'y':       '13XRM:m2.VAL',    'finey':   '13XRM:m2.VAL',
+             'z':       '13XRM:m5.VAL',    'theta':   '13XRM:m3.VAL',
+             'coarsex': '13XRM:m4.VAL',    'coarsey': '13XRM:m6.VAL',
+             'energy':  '13IDE:En:Energy',
+             }
+    return known.get(mname.lower(), None)
+#endef
+
+def _scanloop(scanname, datafile, motorname, vals):
+    """
+    run a named scan at each point for a named motor.
+    expected to be used internally.
+
+    Parameters:
+        scanname (string): name of scan
+        datafile (string): name of datafile (must be given)
+        motorname (string): name of motor
+        vals (list or array of floats): motor values at which to do scan.
+
+    Example:
+        _scanloop('Fe_XAFS', 'sample1_', 'x', [-0.1, 0.0, 0.1])
+
+    Note:
+        output files will named <scanname>_<datafile>_<motorname>I.001
+        where I will increment 1, 2, 3, .. number of points in vals.
+        For the above example, the files will be named
+            'Fe_XAFS_sample1_x1.001',
+            'Fe_XAFS_sample1_x2.001',
+            'Fe_XAFS_sample1_x3.001'
+    """
+    motor = _getPV(motorname)
+    if motor is None:
+        print("Error: cannot find motor named '%s'" % motorname)
+        return
+    #endif
+    filename = '%s_%s_%s.001' % (scanname, datafile, motorname)
+    for i, val in enumerate(vals):
+        caput(motor, val, wait=True)
+        do_scan(scanname,  filename=filename, number=1)
+        if check_scan_abort(): return
+    #endfor
+#enddef
+
+def line_scan(scanname, datafile, motor='x',
+              start=0, stop=0.1, step=0.001):
+    """
+    run a named scan (or map) at each point in along a line
+
+    Parameters:
+        scanname (string): name of scan
+        datafile (string): name for datafile
+        motor (string): name of motor to move ['x']
+        start (float): starting motor value [0]
+        stop (float): ending motor value [0.100]
+        step (float): step size for motor [0.001]
+
+    Example:
+        line_scan('Fe_XAFS', 'sample1', motor='x', start=0, stop=0.05, step=0.005)
+
+    Note:
+       output files will named `<scanname>_<datafile>_<x>I.001`  where I will
+       increment 1, 2, 3, and so on.
+
+       For the example above, the files will be named 'Fe_XAFS_sample1_x1.001',
+       'Fe_XAFS_sample1_x2.001', 'Fe_XAFS_sample1_x3.001', and so on.
+
+    See Also:
+       grid_scan
+
+    """
+    vals = linspace(start, stop, (abs(start-stop)+0.2*step)/abs(step))
+
+    _scanloop(scanname, datafile, motor, vals)
+#enddef
+
+
+def grid_scan(scanname, datafile, x='x', y='y',
+              xstart=0, xstop=0.1, xstep=0.001,
+              ystart=0, ystop=0.1, ystep=0.001):
+    """
+    run a named scan (or map) at each point in an x, y grid
+
+    Parameters:
+        scanname (string): name of scan
+        datafile (string): name for datafile
+        x (string): name of X motor (inner loop) ['x']
+        y (string): name of Y motor (outer loop) ['y']
+        xstart (float): starting X value [0]
+        xstop (float): ending X value [0.100]
+        xstep (float): step size for X value [0.001]
+        ystart (float): starting Y value [0]
+        ystop (float): ending Y value [0.100]
+        ystep (float): step size for Y value [0.001]
+
+    Example:
+        grid_scan('Fe_XAFS', 'sample1', y='theta', xstart=0, xstop=0.05, xstep=0.005,
+                   ystart=0, ystop=10, ystep=1)
+
+    Note:
+        output files will named <scanname>_<datafile>_<y>I_<x>J.001
+        where I and J will increment 1, 2, 3, ...
+        For the above example, the files will be named
+        'Fe_XAFS_sample1_theta1_x1.001',
+        'Fe_XAFS_sample1_theta1_x2.001',
+        'Fe_XAFS_sample1_theta1_x3.001', and so on
+
+    See Also:
+        line_scan, grid_xrd
+
+    """
+    yname = y
+    xname = x
+
+    xvals = linspace(xstart, xstop, (abs(xstart-xstop)+0.2*xstep)/abs(xstep))
+    yvals = linspace(ystart, ystop, (abs(ystart-ystop)+0.2*ystep)/abs(ystep))
+
+    ymotor = _getPV(yname)
+    if ymotor is None:
+        print("Error: cannot find motor named '%s'" % yname)
+        return
     #endif
 
-    # motor name:
-    xmotor = '13XRM:m1.VAL'
-    ymotor = '13XRM:m2.VAL'
-
-    xvals = linspace(xstart, xstop, (abs(xstart-xstop)+xstep/2.0)/abs(xstep))
-    yvals = linspace(ystart, ystop, (abs(ystart-ystop)+ystep/2.0)/abs(ystep))
     for iy, yval in enumerate(yvals):
         caput(ymotor, yval, wait=True)
-        for ix, xval in enumerate(xvals):
-            caput(xmotor, xval, wait=True)
-            do_scan(scan_name,  filename='%s_x%iy%i.001' % (datafile, ix+1, iy+1))
-            if check_scan_abort():  return
-        #endfor
-    #endfor
-#enddef
-
-
-def loop_map(pos_name, map_name, datafile=None, motor='y', start=0, stop=0.1, step=0.001):
-    """ loop_map(pos_name, map_name, start=0, stop=0.1, step=0.001)
-    """
-    print 'Move Sample Stage ', pos_name
-    move_samplestage(pos_name, wait=True)
-    sleep(1.0)
-    if datafile is None:
-        datafile = '%s_%s' % (pos_name, map_name)
-    #endif
-    # resolve motor name:
-    if motor == 'x':  motor = '13XRM:m1.VAL'
-    if motor == 'y':  motor = '13XRM:m2.VAL'
-    if motor == 'th': motor = '13XRM:m3.VAL'
-
-    step = abs(step)
-    values = linspace(start, stop, (abs(start-stop)+step)/step)
-    for i, val in enumerate(values):
-        print 'move motor: ', motor, val
-        caput(motor, val, wait=True)
-        do_slewscan(map_name,  filename='%s_%i' % (datafile, i))
+        ydatafile = "%s_%s%i" % (datafile, yname, iy+1)
+        _scanloop(scanname, ydatafile, xname, xvals)
         if check_scan_abort():  return
     #endfor
 #enddef
 
-
-def line_scan(pos, scanfile, datafile=None, motor='x', start=0, stop=0.1, step=0.001, nscans=1):
-    """line_scan(position_name, scan_name, start=0, stop=0.1, step=0.001)
+def redox_map(scanname, datafile=None,
+              energies=[5460, 5467.5, 5469, 5485.9, 5493.3, 5600]):
     """
-    # print 'Move Sample Stage ', pos
-    move_samplestage(pos, wait=True)
-    sleep(1.0)
-    if datafile is None:
-        datafile = '%s_%s' % (scanfile, pos)
-    #endif
+    repeat a scan or map at multiple energies
 
-    # resolve motor name:
-    motor_dir=motor
-    if motor == 'x':  motor = '13XRM:m1.VAL'
-    if motor == 'y':  motor = '13XRM:m2.VAL'
-    if motor == 'th': motor = '13XRM:m3.VAL'
+    Parameters:
+        scanname (string):  scan name
+        datafile (string or None): name for datafile
+        energies (list of floats):   list of energies (in eV) to run map scan at
 
-    basename = datafile
-    step = abs(step)
-    xvalues = linspace(start, stop, (abs(start-stop)+step)/step)
-    for i, xval in enumerate(xvalues):
-        print 'move motor ', motor, xval
-        caput(motor, xval, wait=True)
-        if i < 10 : datafile = '%s_%s_pos0%i.001' % (basename, motor_dir, i)
-        if i >= 10 : datafile = '%s_%s_pos%i.001' % (basename, motor_dir, i)
-        do_scan(scanfile,  filename=datafile, nscans=nscans)
-        if check_scan_abort():  return
-    #endfor
-#enddef
+    Example:
+       redox_map('MyMap', 'sampleX', energies=[5450, 5465, 5500])
 
-def redox_map(pos, scan, energies=[5460, 5467.5, 5469, 5485.9, 5493.3, 5600], datafile=None):
-    """ redox map: move to a position, repeat map at multiple energies
+    Note:
+        output files will named <scanname>_<energy>eV.001
+        for the example above, the files will be named
+        'MyMap_sampleX_5450.0eV.001',
+        'MyMap_sampleX_5465.0eV.001',
+        'MyMap_sampleX_5500.0eV.001',
 
-   redox_map(pos, scan, energies=[5450, 5465, 5500])
-
-    arguments
-    ---------
-      pos       position name
-      scan      scan name for map
-      energies  list of energies to map at
     """
-    print 'Move Sample Stage ', pos
-    move_samplestage(pos, wait=True)
-    sleep(0.5)
     if datafile is None:
-        datafile = '%s_%s' % (scan, pos)
+        datafile = scanname
     #endif
 
     for en in energies:
@@ -198,25 +239,63 @@ def redox_map(pos, scan, energies=[5460, 5467.5, 5469, 5485.9, 5493.3, 5600], da
 #enddef
 
 
-def xrd_map(name, t=5, xstart=0, xstop=0.1, xstep=0.001, ystart=0, ystop=0.1, ystep=0.001):
+def grid_xrd(datafile, t=5, x='x', y='y',
+             xstart=0, xstop=0.1, xstep=0.001,
+             ystart=0, ystop=0.1, ystep=0.001, bgr_per_row=False):
     """
-    xrd at each point in a rectangular grid
+    collect an XRD image at each point in an x, y grid
+    running save_xrd() at each point in the grid
+
+    Parameters:
+        datafile (string): name for datafile
+        t (float): exposure time per pixel
+        x (string): name of X motor (inner loop) ['x']
+        y (string): name of Y motor (outer loop) ['y']
+        xstart (float): starting X value [0]
+        xstop (float): ending X value [0.100]
+        xstep (float): step size for X value [0.001]
+        ystart (float): starting Y value [0]
+        ystop (float): ending Y value [0.100]
+        ystep (float): step size for Y value [0.001]
+        bgr_per_row (True or False): whether to collec xrd_bgr()
+            at the beginning of each row.
+
+    Example:
+        grid_xrd('MySample', xstart=0, xstop=0.05, xstep=0.005,
+                  ystart=0, ystop=10, ystep=1)
+
+    Note:
+        output files will named <scanname>_<datafile>_<y>I_<x>J.001
+        where I and J will increment 1, 2, 3, and so on.
+        For the above example, the files will be named
+        'MySample_y1_x1.001', 'MySample_y1_x2.001', and so on
+
+    See Also:
+        save_xrd, xrd_bgr
+
     """
-    xstep = abs(xstep)
-    ystep = abs(ystep)
-    xvalues = linspace(xstart, xstop, (abs(xstart-xstop)+xstep*1.1)/xstep)
-    yvalues = linspace(ystart, ystop, (abs(ystart-ystop)+ystep*1.1)/ystep)
-    for iy, y in enumerate(yvalues):
-        caput('13XRM:m2.VAL', y, wait=True)
-        xrd_bgr()
-        fname = name + '_%i' % (iy+1)
-        caput('13MARCCD1:cam1:FileNumber', 1)
-        for x in xvalues:
-           print 'move x ', x
-           caput('13XRM:m1.VAL', x, wait=True)
-           save_xrd(fname, t=t)
+
+    yname = y
+    xname = x
+
+    xvals = linspace(xstart, xstop, (abs(xstart-xstop)+0.2*xstep)/abs(xstep))
+    yvals = linspace(ystart, ystop, (abs(ystart-ystop)+0.2*ystep)/abs(ystep))
+
+    ymotor = _getPV(yname)
+    if ymotor is None:
+        print("Error: cannot find motor named '%s'" % yname)
+        return
+    #endif
+
+    for iy, yval in enumerate(yvals):
+        caput(ymotor, yval, wait=True)
+        if bgr_per_row: xrd_bgr()
+        ydatafile = "%s_%s%i" % (datafile, yname, iy+1)
+        for ix, xval in enumerate(xvals):
+           caput(xmotor, xval, wait=True)
+           fname = ydatafile + '_%s%i' % (xname, ix+1)
+           save_xrd(fname, t=t, ext=1)
            if check_scan_abort():  return
         #endfor
     #endfor
-    sleep(1.0)
 #enddef

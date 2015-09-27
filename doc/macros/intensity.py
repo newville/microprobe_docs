@@ -2,12 +2,53 @@
 ## Macros for setting intensities and Ion Chamber gains
 ##
 
+
+def feedback_off():
+    """Turn intensity feedback off
+    """
+    caput('13IDA:efast_pitch_pid.FBON', 0)
+    caput('13IDA:efast_roll_pid.FBON', 0)
+#enddef
+
+def optimize_id():
+    """Optimize undulator by scanning ID energy and
+    finding highest I0 intensity
+
+    Examples:
+        optimize_id()
+    """
+
+    mono_energy = caget('13IDE:En:Energy')  / 1000.0
+    id_harmonic = caget('13IDE:En:id_harmonic')
+    offset = (10 * mono_energy + 2*(id_harmonic-1)) / 1000.0
+    offset = max(0.010, offset)
+
+    idvals = mono_energy + linspace(0, 2, 21)*offset
+    caput('ID13us:ScanEnergy', mono_energy-offset)
+    sleep(3.0)
+    best_id = ivals[10]
+    best_i0  = 0.0
+    for idval in idvals:
+       caput('ID13us:ScanEnergy', idval)
+       sleep(1.00)
+       caget('13IDE:scaler1.S2', i0)
+       if i0 > best_i0:
+          best_i0 = i0
+          best_id = idval
+       #endif
+    #endfor
+    print 'best ID ', best_i0, best_id
+#enddef
+
+
 def collect_offsets(t=10):
-    """Collect scaler offsets
-    Parameters
-    ----------
-    t   : float
-        time in seconds to count for to calculate offsets
+    """Collect dark-current offsets for Ion chameber scalers
+
+    Args:
+        t (float):  time in seconds to count dark current for (default 10)
+
+    Examples:
+        collect_offsets()
     """
     # close shutter
     caput('13IDA:CloseEShutter.PROC', 1)
@@ -40,20 +81,18 @@ def collect_offsets(t=10):
 def set_SRSgain(sens, unit, prefix='13IDE:A1', offset=100):
     """set pre-amplifier sensitivity, units, and offset
 
-    Parameters
-    ----------
-    sens :  int
-        Number for sensitivity. one of (1, 2, 5, 10, 20, 50, 100, 200, 500).
-    units :  string
-        Unit sring. one of  ('pA/V', 'nA/V', 'uA/V', 'mA/V').
-    prefix : string
-        PV prefix for SRS570 amplifier [default '13IIDE:A1']
-    offset : float
-        Input current offset for amplifier [default 100]
+    Args:
+        sens (int):  Number for sensitivity.
+            One of (1, 2, 5, 10, 20, 50, 100, 200, 500).
+        units (string): Unit sring.
+            One of  ('pA/V', 'nA/V', 'uA/V', 'mA/V').
+        prefix (string): PV prefix for SRS570 amplifier [default '13IIDE:A1']
+        offset (float):  Input current offset for amplifier [default 100]
 
-    Examples
-    --------
-    set_SRSamp_gain(100, 'nA/V', prefix='13IDE:A2', offset=105)
+    Examples:
+
+       set_SRSgain(100, 'nA/V', prefix='13IDE:A2', offset=105)
+
     """
     steps = [1, 2, 5, 10, 20, 50, 100, 200, 500]
     units = ['pa/v', 'na/v','ua/v', 'ma/v']
@@ -77,17 +116,17 @@ def set_SRSgain(sens, unit, prefix='13IDE:A1', offset=100):
 def set_i1amp_gain(sens, unit, offset=100):
     """set I1 pre-amplifier sensitivity, units, and offset
 
-    Parameters
-    ----------
-    sens:   number for sensitivity
-            one of (1, 2, 5, 10, 20, 50, 100, 200, 500)
-    units:  string for units
-            one of  ('pA/V', 'nA/V', 'uA/V', 'mA/V')
-    offset: number for current offset  [default 100]
 
-    Examples
-    --------
-    set_i1amp_gain(100, 'nA/V')
+    Args:
+        sens (int):  Number for sensitivity.
+            One of (1, 2, 5, 10, 20, 50, 100, 200, 500).
+        units (string): Unit sring.
+            One of  ('pA/V', 'nA/V', 'uA/V', 'mA/V').
+        prefix (string): PV prefix for SRS570 amplifier [default '13IIDE:A1']
+        offset (float):  Input current offset for amplifier [default 100]
+
+    Examples:
+        set_i1amp_gain(100, 'nA/V')
     """
     set_SRSgain(sens, unit, prefix='13IDE:A2', offset=offset)
 #enddef
@@ -95,17 +134,17 @@ def set_i1amp_gain(sens, unit, offset=100):
 def set_i0amp_gain(sens, unit, offset=100):
     """set I0 pre-amplifier sensitivity, units, and offset
 
-    Parameters
-    ----------
-    sens:   number for sensitivity
-            one of (1, 2, 5, 10, 20, 50, 100, 200, 500)
-    units:  string for units
-            one of  ('pA/V', 'nA/V', 'uA/V', 'mA/V')
-    offset: number for current offset  [default 100]
+    Args:
+        sens (int):  Number for sensitivity.
+            One of (1, 2, 5, 10, 20, 50, 100, 200, 500).
+        units (string): Unit sring.
+            One of  ('pA/V', 'nA/V', 'uA/V', 'mA/V').
+        prefix (string): PV prefix for SRS570 amplifier [default '13IIDE:A1']
+        offset (float):  Input current offset for amplifier [default 100]
 
-    Examples
-    --------
-    set_i0amp_gain(100, 'nA/V')
+    Examples:
+        set_i0amp_gain(100, 'nA/V')
+
     """
     set_SRSgain(sens, unit, prefix='13IDE:A1', offset=offset)
 #enddef
@@ -115,21 +154,15 @@ def autoset_gain(prefix='13IDE:A1', scaler='13IDE:scaler1.S2', offset=100, count
     """
     automatically set i0 gain to be in range
 
-    Parameters
-    ----------
-    prefix : string
-       PV name for SRS570.
-    scaler : string
-       PV name for scaler reading to use for reading intensity.
-    offset : float
-       Scaler offset value to use (default 100).
-    count : int
-       Recursion count to avoid infinite loop.
+    Args:
+       prefix (string): PV name for SRS570.
+       scaler (string): PV name for scaler reading to use for reading intensity.
+       offset (float):  Scaler offset value to use (default 100).
+       count (int):     Recursion count to avoid infinite loop.
 
-    Returns
+    Returns:
     -------
-    success : bool
-       Whether setting the gain succeeded.
+       success (True or False): whether setting the gain succeeded.
     """
 
     # limit number of attempts

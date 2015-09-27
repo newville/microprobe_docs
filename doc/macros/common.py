@@ -6,63 +6,6 @@ def shutdown_server():
 #enddef
 
 
-def feedback_off():
-    caput('13IDA:efast_pitch_pid.FBON', 0)
-    caput('13IDA:efast_roll_pid.FBON', 0)
-#enddef
-
-def optimize_id():
-    mono_energy = caget('13IDE:En:Energy')
-    id_harmonic = caget('13IDE:En:id_harmonic')
-    offset = (0.01 * mono_energy + (id_harmonic-1)*2.0)*1.e-3
-    offset = max(0.010, min(0.300, offset))
-
-    idvals = 1.e-3 * mono_en + linspace(0, 2, 21)*offset
-    print 1.e-3 * mono_en, offset, idvals
-    best_id = ivals[10]
-    best_i0  = 0.0
-    for idval in idvals:
-       caput('ID13us:ScanEnergy', idval)
-       sleep(0.5)
-       caget('13IDE:scaler1.S2', i0)
-       if i0 > best_i0:
-          best_i0 = i0
-          best_id = idval
-       #endif
-    #endfor
-    print 'best ID ', best_i0, best_id
-#enddef
-
-
-def collect_offsets(t=10):
-    '''collect scaler offsets'''
-    # close shutter
-    caput('13IDA:CloseEShutter.PROC', 1)
-    # set scaler to 1 shot mode, count time of 10 seconds
-    count_time =  caget('13IDE:scaler1.TP')
-
-    caput('13IDE:scaler1.CONT', 0)
-    caput('13IDE:scaler1.TP',   t)
-    caput('13IDA:CloseEShutter.PROC', 1, wait=True)
-    time.sleep(3.0)
-    caput('13IDE:scaler1.CNT', 1, wait=True)
-    time.sleep(0.5)
-    # read clock ticks, and counts for each channel
-    clock_count = 1.0*caget('13IDE:scaler1.S1')
-    for i, name in ((2, 'B'), (3, 'C'), (4, 'D'), (5, 'E')):
-       desc = caget('13IDE:scaler1.NM%i' % i)
-       if len(desc) > 0:
-          counts = caget('13IDE:scaler1.S%i'  % i)
-          scale = counts/(clock_count)
-          expr   = "%s-(A*%.6g)" % (name, scale)
-          caput('13IDE:scaler1_calc%i.CALC' % i, expr)
-       #endif
-    #endfor
-    # reset count time, put in auto-count mode, open shutter
-    caput('13IDE:scaler1.TP',   count_time)
-    caput('13IDE:scaler1.CONT', 1)
-    caput('13IDA:OpenEShutter.PROC', 1)
-#enddef
 
 
 def low_flux():

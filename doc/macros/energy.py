@@ -1,10 +1,15 @@
+"""
+Commands for moving the monochromator energy and related tasks.
 
+"""
 def move_energy(energy, id_offset=None, id_harmonic=None, wait=True):
-    """move energy to desired value, optionally specifying how to move the undulator.
+    """
+    move energy to desired value, optionally specifying
+    how to move the undulator.
 
-    Args:
+    Parameters:
         energy (float):  Energy in eV
-        id_offset (float or None):  Undulator Offset.  undulator - mono energy (in keV!).
+        id_offset (float or None):  Undulator Offset. (Undulator - mono energy, in keV).
              if None (default) the value will not be changed
         id_harmonic (int or None): Undulator harmonic to use.
              if None (default) the value will not be changed
@@ -31,7 +36,16 @@ def move_energy(energy, id_offset=None, id_harmonic=None, wait=True):
 
 
 def use_si111(energy=7200):
-    """Switch to Si(111)"""
+    """
+    switch to Si(111)
+
+    Parameters:
+        energy (float): energy to set mono to.
+
+    Notes:
+       Use with Caution!  Consult Matt or Tony first!
+
+    """
     caput('13IDA:m32',        1.7)
     caput('13IDA:m65.OFF',   17.52533)
     caput('13IDA:m67.VAL',    -0.132)
@@ -47,7 +61,16 @@ def use_si111(energy=7200):
 
 
 def use_si311(energy=7200):
-    """Switch to Si(111)"""
+    """
+    switch to Si(211)
+
+    Parameters:
+        energy (float): energy to set mono to.
+
+    Notes:
+       Use with Caution!  Consult Matt or Tony first!
+
+    """
     caput('13IDA:m32',        -1.85)
     caput('13IDA:m65.OFF',   17.62234)
     caput('13IDA:m67.VAL',     0.146)
@@ -63,7 +86,20 @@ def use_si311(energy=7200):
 
 
 def bpm_foil(foilname):
-    "change BPM Foil"
+    """
+    select and move to BPM Foil by name
+
+    Parameters:
+        name (string): name of foil. One of
+               'open', 'Ti', 'Cr', 'Ni', 'Al', 'Au'
+
+    Notes:
+       not case-sensitive.
+
+    Example:
+       bpm_foil('Ni')
+
+    """
     foilname = foilname.title()
     if foilname not in ('Open', 'Ti', 'Cr', 'Ni', 'Al', 'Au'):
        print("Unknown Foil Name '%s'"  % foilname)
@@ -74,38 +110,64 @@ def bpm_foil(foilname):
 
 
 def mirror_stripe(name='silicon', wait=True):
-   value = 0.0
-   if name.lower().startswith('r'): value = 9.0
-   if name.lower().startswith('p'): value = -9.0
-   caput('13IDA:m10.VAL', value, wait=wait)
-   caput('13IDA:m11.VAL', value, wait=wait)
-   caput('13IDA:m12.VAL', value, wait=wait)
+    """
+    move beamline mirrors to a particular stripe by name
+
+    Parameters:
+        name (string): name of stripe. One of
+            'silicon', 'rhodium', 'platinum' ['silicon']
+        wait (True or False): whether to wait for move
+            to complete before returning [True]
+
+    Note:
+        the first letter of the stripe ('s', 'r', 'p') is
+        sufficient.
+
+    Example:
+        mirror_stripe('rh')
+
+    """
+    SCALE = 8.0
+    value = 0.0
+    if name.lower().startswith('r'): value =  1.0
+    if name.lower().startswith('p'): value = -1.0
+    value = value * SCALE
+    caput('13IDA:m10.VAL', value, wait=False)
+    caput('13IDA:m11.VAL', value, wait=False)
+    caput('13IDA:m12.VAL', value, wait=False)
+    if wait:
+        caput('13IDA:m10.VAL', value, wait=True)
+        caput('13IDA:m11.VAL', value, wait=True)
+        caput('13IDA:m12.VAL', value, wait=True)
+    #endif
 #enddef
 
-def move_to_edge(element, edge='K', id_harmonic=None, id_offset=None, stripe=None, foil=None, with_tilt=True):
-    '''move energy to just above the edge of an element
+def move_to_edge(element, edge='K', id_harmonic=None, id_offset=None,
+                 stripe=None, foil=None, with_tilt=True):
+    """move energy to just above the edge of an element
 
-    Args:
+    Parameters:
         element (str):  atomic symbol for element
         edge (str):  edge name ('K', 'L3', 'L2', 'L1', 'M')
-        id_offset (float or None):  Undulator Offset.  undulator - mono energy (in keV!).
+        id_offset (float or None):  Undulator Offset, the
+             undulator - mono energy in keV.
              if None (default) the value will not be changed
         id_harmonic (int or None): Undulator harmonic to use.
              if None (default) the value will not be changed
         stripe (str or None): name of mirror coating for beamline mirrors
              one of 'Si', 'Rh', 'Pt'
-             if None (default) the stripe will be chosen automatically based on energy
+             if None (default) the stripe will be chosen based on energy.
         foil (str or None): name of foil to use in X-ray Beam Position Monitor.
              one of 'Au', 'Ni', 'Cr', 'Ti', or 'Al'
-             if None (default) the foil will be chosen automatically based on energy
-        with_tilt (bool): whether to automatically adjust mono tilt (default is True)
+             if None (default) the foil will be chosen based on energy.
+        with_tilt (bool): whether to adjust mono tilt [True]
 
     Examples:
        move_to_edge('V', 'K')
 
        move_to_edge('W', 'L3', stripe='Rh', with_tilt=False)
 
-    '''
+    """
 
     edge_energy = xray_edge(element, edge)[0]
     if edge_energy > 36000 and edge == 'K':
@@ -163,6 +225,20 @@ def move_to_edge(element, edge='K', id_harmonic=None, id_offset=None, stripe=Non
     #endif
 #enddef
 
+def move_to_map():
+    "move to 10.5 keV"
+    move_to_edge('Ga', id_offset=0.110, id_harmonic=3)
+    move_energy(10500.0, id_offset=0.110)
+#enddef
+
+def move_to_xrd():
+    "move to 18.0 keV "
+    move_to_edge('Zr', id_offset=0.175, id_harmonic=3, with_tilt=False)
+    set_i0amp_gain(2, 'nA/V')
+    move_energy(18000.0, id_offset=0.175)
+    set_mono_tilt()
+#enddef
+
 def move_to_ti():
     "move to Ti K Edge"
     move_to_edge('Ti', id_offset=0.050, foil='Al',   id_harmonic=1, with_tilt=False)
@@ -216,28 +292,20 @@ def move_to_cu():
     "move to Cu K Edge"
     set_i0amp_gain(20, 'nA/V')
     move_to_edge('Cu', id_offset=0.090, id_harmonic=1)
-    detector_distance(40)
 #enddef
 
 def move_to_ni():
     "move to Ni K Edge"
     set_i0amp_gain(10, 'nA/V')
     move_to_edge('Ni', id_offset=0.080, id_harmonic=3)
-    detector_distance(55)
 #enddef
 
 def move_to_zn():
     "move to Zn K Edge"
     set_i0amp_gain(20, 'nA/V')
     move_to_edge('Zn', id_offset=0.098, id_harmonic=1)
-    detector_distance(40)
 #enddef
 
-def move_to_map():
-    "move to 10.5 keV"
-    move_to_edge('Ga', id_offset=0.110, id_harmonic=3)
-    move_energy(10500.0, id_offset=0.110)
-#enddef
 
 
 def move_to_sr():
@@ -258,21 +326,10 @@ def move_to_mo():
     move_to_edge('Mo', id_offset=0.150, id_harmonic=3)
 #enddef
 
-def move_to_xrd():
-    "move to 18.0 keV "
-    move_to_edge('Zr', id_offset=0.175, id_harmonic=3, with_tilt=False)
-    set_i0amp_gain(2, 'nA/V')
-    move_energy(18000.0, id_offset=0.175)
-    set_mono_tilt()
-    ## detector_distance(50)
-#enddef
-
-
 def move_to_as():
     "move to As K edge"
     set_i0amp_gain(5, 'nA/V')
     move_to_edge('As', id_offset=0.100)
-    # detector_distance(50)
 #enddef
 
 def move_to_w():
@@ -281,5 +338,4 @@ def move_to_w():
     caput('13IDA:DAC1_7.VAL', 3.46)
     caput('13IDA:DAC1_8.VAL', 6.77)
     move_to_edge('W', 'L3', id_offset=0.106)
-    detector_distance(60)
 #enddef

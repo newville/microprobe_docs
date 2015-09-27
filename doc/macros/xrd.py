@@ -1,28 +1,57 @@
-##
-## Macros for X-ray Diffraction
-##
+"""
+Commands for X-ray Diffraction
+
+Note that an XRD camera must be installed!
+"""
+
 def save_xrd(name, t=10, ext=None, prefix='13PEL1:', timeout=60.0):
-   # save_xrd_marccd(name, t=t, ext=ext, prefix=prefix)
-   save_xrd_pe(name, t=t, ext=ext, prefix=prefix)
+    """
+    Save XRD image from XRD camera.
+
+    Parameters:
+        name (string):  name of datafile
+        t (float):   exposure time in seconds [default= 10]
+        ext (int or None): number for file extension
+            if left as None, the extension will be auto-incremented.
+        prefix (string):   PV prefix for areaDetector camera ['13PE1:']
+        timeout (float): maximumn time in seconds to wait
+            for image to be saved [60]
+
+    Examples:
+        save_xrd('CeO2', t=20)
+
+    Note:
+        calls one of `save_xrd_marccd` or `save_xrd_pe`
+
+    See Also:
+       `save_xrd_marccd`, `save_xrd_pe`
+
+    """
+    # save_xrd_marccd(name, t=t, ext=ext, prefix=prefix)
+    save_xrd_pe(name, t=t, ext=ext, prefix=prefix)
 #enddef
 
 
 def save_xrd_pe(name, t=10, ext=None, prefix='13PEL1:', timeout=60.0):
-    """Save XRD image from Perkin Elmer camera to file
-
-    use prefix=dp_pe2: for detector pool camera!
-
-    Parameters
-    ----------
-    name:     string for sample name
-    t:        exposure time in seconds (default = 10)
-    ext:      number for file extension (default = 1)
-    prefix:   Camera PV prefix ('13PE1:')
-
-    Examples
-    --------
-    save_xrd('CeO2', t=20)
     """
+    Save XRD image from Perkin-Elmer camera.
+
+    Parameters:
+        name (string):  name of datafile
+        t (float):   exposure time in seconds [default= 10]
+        ext (int or None): number for file extension
+            if left as None, the extension will be auto-incremented.
+        prefix (string):   PV prefix for areaDetector camera ['13PE1:']
+        timeout (float): maximumn time in seconds to wait
+            for image to be saved [60]
+
+    Examples:
+        save_xrd_pe('CeO2', t=20)
+
+    Notes:
+        detector pool PE detector has prefix like 'dp_pe2:'
+    """
+
     # prefix='dp_pe2:'
 
     # save shutter mode, disable shutter for now
@@ -72,23 +101,30 @@ def save_xrd_pe(name, t=10, ext=None, prefix='13PEL1:', timeout=60.0):
 #enddef
 
 def save_xrd_marccd(name, t=10, ext=None, prefix='13MARCCD1:', timeout=60.0):
-    """Save XRD image from MARCCD camera to file
+    """
+    save XRD image from MARCCD (Rayonix 165) camera to file
 
-    Parameters
-    ----------
-    name:     string for sample name
-    t:        exposure time in seconds (default = 10)
-    ext:      number for file extension (default = 1)
-    prefix:   Camera PV prefix ('13MARCCD1:')
+    Parameters:
+        name (string):  name of datafile
+        t (float):   exposure time in seconds [default= 10]
+        ext (int or None): number for file extension
+            if left as None, the extension will be auto-incremented.
+        prefix (string):   PV prefix for areaDetector camera ['13MARCCD1:']
+        timeout (float): maximumn time in seconds to wait
+            for image to be saved [60]
 
-    Examples
-    --------
-    save_xrd('CeO2', t=20)
+    Examples:
+        save_xrd_marccd('CeO2', t=20)
+
+    Note:
+        The marccd requires the Epics Shutter to be set up correctly.
+
     """
     start_time = time()
 
     # save shutter mode, disable shutter for now
     shutter_mode = caget(prefix+'cam1:ShutterMode')
+
     # NOTE: Need to start acquisition with the shutter
     # having been closed for awhile
     # using the SSA H Width as shutter we want
@@ -125,7 +161,14 @@ def save_xrd_marccd(name, t=10, ext=None, prefix='13MARCCD1:', timeout=60.0):
 
 
 def xrd_bgr(prefix='13MARCCD1:', timeout=120.0):
-    """XRD Background"""
+    """
+    collect XRD Background for marccd
+
+    Parameters:
+        prefix (string): PV prefix for camera ['13MARCCD1:']
+        timeout (float): maximum time to wait [120]
+
+    """
     caput(prefix+'cam1:ShutterControl', 0)
     caput(prefix+'cam1:FrameType', 1)
     sleep(0.1)

@@ -1,6 +1,6 @@
 ##
 ## Macros for setting intensities and Ion Chamber gains
-## 
+##
 
 def collect_offsets(t=10):
     """Collect scaler offsets
@@ -26,7 +26,7 @@ def collect_offsets(t=10):
        desc = caget('13IDE:scaler1.NM%i' % i)
        if len(desc) > 0:
           counts = caget('13IDE:scaler1.S%i'  % i)
-	      scale = counts/(clock_count)
+          scale = counts/(clock_count)
           expr   = "%s-(A*%.6g)" % (name, scale)
           caput('13IDE:scaler1_calc%i.CALC' % i, expr)
        #endif
@@ -46,7 +46,7 @@ def set_SRSgain(sens, unit, prefix='13IDE:A1', offset=100):
         Number for sensitivity. one of (1, 2, 5, 10, 20, 50, 100, 200, 500).
     units :  string
         Unit sring. one of  ('pA/V', 'nA/V', 'uA/V', 'mA/V').
-    prefix : string 
+    prefix : string
         PV prefix for SRS570 amplifier [default '13IIDE:A1']
     offset : float
         Input current offset for amplifier [default 100]
@@ -114,7 +114,7 @@ def set_i0amp_gain(sens, unit, offset=100):
 def autoset_gain(prefix='13IDE:A1', scaler='13IDE:scaler1.S2', offset=100, count=0):
     """
     automatically set i0 gain to be in range
-    
+
     Parameters
     ----------
     prefix : string
@@ -224,7 +224,7 @@ def find_max_intensity(readpv, drivepv, vals, minval=0.1):
     -------
      if the best intensity is below minval, the position is
      moved back to the original position.
-     
+
     """
     _orig = _best = caget(drivepv)
     i0max = caget(readpv)
@@ -318,7 +318,6 @@ def set_mono_tilt(enable_fb_roll=True, enable_fb_pitch=False):
     #endif
     if enable_fb_pitch:
         caput('13XRM:edb:use_fb', 1)
-    #endif        
+    #endif
     print 'Set Mono tilt done'
 #enddef
-

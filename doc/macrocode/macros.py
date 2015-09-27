@@ -1,11 +1,12 @@
-run('common_macros.lar')
-run('scan_macros.lar')
-run('samplestage.lar')
+# run('common_macros.lar')
+# run('scan_macros.lar')
+# run('samplestage.lar')
+
 import time
 
 ##
 ## Macros for moving instruments
-## 
+##
 
 def move_instrument(inst_name, position_name, wait=False,
                     prefix='13XRM:Inst:', timeout=60.0):
@@ -26,7 +27,7 @@ def move_instrument(inst_name, position_name, wait=False,
     Notes
     ------
     This requires a working Epics Instrument program to be running.
-    
+
     """
     caput(prefix + 'InstName', inst_name)
     caput(prefix + 'PosName', position_name)
@@ -131,5 +132,3 @@ def feedback_off():
     caput('13IDA:efast_pitch_pid.FBON', 0)
     caput('13IDA:efast_roll_pid.FBON', 0)
 #enddef
-
-

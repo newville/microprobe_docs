@@ -26,13 +26,13 @@
 import json
 from collections import OrderedDict
 
-if not hasattr(_scan, '_instdb'):
-    connect_scandb(dbname='epics_scan',
-                server='postgresql', 
-                host='ion.cars.aps.anl.gov',
-                user='epics',
-                password='microXAFS@13IDE')
-#endif
+# if not hasattr(_scan, '_instdb'):
+#     connect_scandb(dbname='epics_scan',
+#                 server='postgresql',
+#                 host='ion.cars.aps.anl.gov',
+#                 user='epics',
+#                 password='microXAFS@13IDE')
+# #endif
 
 
 def read_uscope_xyz(name = 'IDE_Microscope'):
@@ -52,7 +52,7 @@ def read_uscope_xyz(name = 'IDE_Microscope'):
 def read_sample_xyz(name = 'IDE_SampleStage'):
     """read XYZ Positions from IDE SampleStage Instrument
     returns dictionary of PositionName: (x, y, z)
-    
+
     Note: FineX, FineY and Theta stages are not included
     """
     out = OrderedDict()
@@ -66,9 +66,9 @@ def read_sample_xyz(name = 'IDE_SampleStage'):
     return out
 #enddef
 
-        
+
 def params2rotmatrix(params, mat):
-    """--private--  turn fitting parameters 
+    """--private--  turn fitting parameters
     into rotation matrix
     """
     mat[0][1] = params.c01
@@ -85,7 +85,7 @@ def resid_rotmatrix(params, mat, v1, v2):
     mat = params2rotmatrix(params, mat)
     return (v2 - dot(mat, v1)).flatten()
 #enddef
-    
+
 
 def calc_rotmatrix(d1, d2):
     """get best-fit rotation matrix to transform coordinates
@@ -100,9 +100,9 @@ def calc_rotmatrix(d1, d2):
     #endfor
     labels.sort()
     if len(labels) < 6:
-        print """Error: need at least 6 saved positions 
+        print """Error: need at least 6 saved positions
   in common to calculate rotation matrix"""
-        
+
         return None, None, None
     #endif
     v1 = ones((4, len(labels)))
@@ -116,7 +116,7 @@ def calc_rotmatrix(d1, d2):
         v2[2, i] = d2[label][2]
     #endfor
 
-    # get initial rotation matrix, assuming that 
+    # get initial rotation matrix, assuming that
     # there are orthogonal coordinate systems.
     mat = transforms.superimposition_matrix(v1, v2, scale=True)
 
@@ -140,17 +140,17 @@ def calc_rotmatrix(d1, d2):
 def make_uscope_rotation():
     """Calculate the rotation maxtrix needed to convert
     IDE Microscope (off-line) to IDE SampleStage (on-line)
-    
-    This calculates the rotation matrix based on all 
+
+    This calculates the rotation matrix based on all
     positions names that occur in the Position List for
     both instruments.
 
-    The result is saved as a json dictionary of the 
+    The result is saved as a json dictionary of the
     IDE_Microscope instrument
-    
+
     No arguments.
     """
-    
+
     d1 = read_uscope_xyz()
     d2 = read_sample_xyz()
     # calculate the rotation matrix
@@ -158,7 +158,7 @@ def make_uscope_rotation():
     if mat is None:
         return
     #endif
-    
+
     # now save to 'notes' for the Microscope instrument
     uscope = _scan._instdb.get_instrument('IDE_Microscope')
     notes = uscope.notes
@@ -174,9 +174,9 @@ def make_uscope_rotation():
 #enddef
 
 def uscope2sample(suffix=''):
-    """transfer all named positions saved for the 
+    """transfer all named positions saved for the
     IDE Microscope (off-line) to IDE SampleStage (on-line)
-    
+
     Applies the rotation matrix saved by the function
 
       `make_uscope_rotation()`
@@ -184,10 +184,10 @@ def uscope2sample(suffix=''):
     Arguments
     ---------
      suffix: string, default ''
-        suffix to apply when transferring names, so as 
+        suffix to apply when transferring names, so as
         to avoid name clashes -- otherwise previously
         saved positions named may be overwritten.
-  
+
     """
     uscope = _scan._instdb.get_instrument('IDE_Microscope')
     sample = _scan._instdb.get_instrument('IDE_SampleStage')
@@ -212,11 +212,11 @@ def uscope2sample(suffix=''):
     pred = dot(rotmat, v)
 
     # make SampleStage coordinates
-    stage = _scan._instdb.get_instrument('IDE_SampleStage')    
+    stage = _scan._instdb.get_instrument('IDE_SampleStage')
     spos = OrderedDict()
     for pv in stage.pvs:
         spos[pv.name] = 0.000
-    #endfor    
+    #endfor
     xpv, ypv, zpv = '13XRM:m4.VAL', '13XRM:m6.VAL', '13XRM:m5.VAL'
     for i, label in enumerate(labels):
         spos[xpv] = pred[0, i]

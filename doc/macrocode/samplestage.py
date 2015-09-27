@@ -1,3 +1,14 @@
+def move_fine(x=None, y=None):
+    "move fine stages to x, y values"
+    if x is not None:
+       caput('13XRM:m1.VAL', x)
+    #endif
+    if y is not None:
+       caput('13XRM:m2.VAL', y)
+    #endif
+#enddef
+
+
 def move_samplestage(position, instrument='IDE_SampleStage', wait=True, timeout=60):
     """move Sample Stage to named position
 

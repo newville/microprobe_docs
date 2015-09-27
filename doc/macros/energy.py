@@ -42,7 +42,7 @@ def use_si111(energy=7200):
     Parameters:
         energy (float): energy to set mono to.
 
-    Notes:
+    Note:
        Use with Caution!  Consult Matt or Tony first!
 
     """
@@ -67,7 +67,7 @@ def use_si311(energy=7200):
     Parameters:
         energy (float): energy to set mono to.
 
-    Notes:
+    Note:
        Use with Caution!  Consult Matt or Tony first!
 
     """
@@ -93,7 +93,7 @@ def bpm_foil(foilname):
         name (string): name of foil. One of
                'open', 'Ti', 'Cr', 'Ni', 'Al', 'Au'
 
-    Notes:
+    Note:
        not case-sensitive.
 
     Example:

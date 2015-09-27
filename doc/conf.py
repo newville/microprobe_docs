@@ -19,6 +19,7 @@ sys.path.insert(0, 'macros')
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
+
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.pngmath',
               'sphinx.ext.linkcode',
@@ -45,8 +46,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Epics Step Scans'
-copyright = u'2012, Matthew Newville'
+project = u'EpicsScans'
+copyright = u'2015, Matthew Newville'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

@@ -48,7 +48,7 @@ def save_xrd_pe(name, t=10, ext=None, prefix='13PEL1:', timeout=60.0):
     Examples:
         save_xrd_pe('CeO2', t=20)
 
-    Notes:
+    Note:
         detector pool PE detector has prefix like 'dp_pe2:'
     """
 

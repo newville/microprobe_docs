@@ -11,7 +11,7 @@ import sys, os
 
 sys.path.append(os.path.abspath(os.path.join('..', 'lib')))
 
-sys.path.insert(0, 'macrocode')
+sys.path.insert(0, 'macros')
 
 ## sys.path.append(os.path.abspath(os.path.join('.', 'ext')))
 

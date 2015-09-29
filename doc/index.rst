@@ -8,11 +8,10 @@ Important capabilities also include doing X-ray Absorption Fine-Structure
 Spectroscopy (XAFS) and X-ray Diffraction (XRD) at the micron scale.
 
 
-
-
 .. toctree::
    :maxdepth: 2
 
    overview
-   gui
+   starting
+   oscar
    commands

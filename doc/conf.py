@@ -21,7 +21,7 @@ sys.path.insert(0, 'macros')
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 
 extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.pngmath',
+              'sphinx.ext.mathjax',
               'sphinx.ext.linkcode',
               'sphinx.ext.napoleon',
               'numpydoc']

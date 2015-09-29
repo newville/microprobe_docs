@@ -1,27 +1,24 @@
-##
-## code to support Off-line Microscope and
-## transfer of coordinates to Sample Stage
-##
-## main functions:
-##
-## .... uscope2sample(suffix='') ....
-##
-## transfer all named positions saved for the IDE Microscope (off-line)
-## to IDE SampleStage (on-line), applying the rotation matrix saved by
-## the function `make_uscope_rotation()`
-##
-##
-## .... make_uscope_rotation() ....
-##
-## calculate and store best rotation matrix to transform positions from
-## the IDE Microscope (off-line) to IDE SampleStage (on-line).
-##
-## this uses position names that are the same in both instruments, and
-## requires at least 6 such positions. That is, save positions with the
-## same names in both the IDE_Microscope and IDE_SampleStage.
-## Positions names not found in both instruments are ignored.
-##########################################################################
-##
+"""
+Code to support Off-line Microscope and transfer of coordinates to Sample Stage
+
+main functions:
+
+uscope2sample(suffix=''):
+
+   transfer all named positions saved for the IDE Microscope (off-line)
+   to IDE SampleStage (on-line), applying the rotation matrix saved by
+   the function `make_uscope_rotation()`
+
+make_uscope_rotation()
+
+   calculate and store best rotation matrix to transform positions from
+   the IDE Microscope (off-line) to IDE SampleStage (on-line).
+
+   this uses position names that are the same in both instruments, and
+   requires at least 6 such positions. That is, save positions with the
+   same names in both the IDE_Microscope and IDE_SampleStage.
+   Positions names not found in both instruments are ignored.
+"""
 
 import json
 from collections import OrderedDict
@@ -35,8 +32,9 @@ from collections import OrderedDict
 # #endif
 
 
-def read_uscope_xyz(name = 'IDE_Microscope'):
-    """read XYZ Positions from IDE Microscope Instrument
+def read_uscope_xyz(name='IDE_Microscope'):
+    """
+    read XYZ Positions from IDE Microscope Instrument
     returns dictionary of PositionName: (x, y, z)
     """
     out = OrderedDict()
@@ -49,8 +47,9 @@ def read_uscope_xyz(name = 'IDE_Microscope'):
     return out
 #enddef
 
-def read_sample_xyz(name = 'IDE_SampleStage'):
-    """read XYZ Positions from IDE SampleStage Instrument
+def read_sample_xyz(name='IDE_SampleStage'):
+    """
+    read XYZ Positions from IDE SampleStage Instrument
     returns dictionary of PositionName: (x, y, z)
 
     Note: FineX, FineY and Theta stages are not included
@@ -120,12 +119,12 @@ def calc_rotmatrix(d1, d2):
     # there are orthogonal coordinate systems.
     mat = transforms.superimposition_matrix(v1, v2, scale=True)
 
-    params = group(c10   = param(mat[1][0], vary=True),
-                   c01   = param(mat[0][1], vary=True),
-                   c20   = param(mat[2][0], vary=True),
-                   c02   = param(mat[0][2], vary=True),
-                   c12   = param(mat[1][2], vary=True),
-                   c21   = param(mat[2][1], vary=True) )
+    params = group(c10 = param(mat[1][0], vary=True),
+                   c01 = param(mat[0][1], vary=True),
+                   c20 = param(mat[2][0], vary=True),
+                   c02 = param(mat[0][2], vary=True),
+                   c12 = param(mat[1][2], vary=True),
+                   c21 = param(mat[2][1], vary=True) )
 
     fit_result = minimize(resid_rotmatrix, params, args=(mat, v1, v2))
     mat = params2rotmatrix(params, mat)
@@ -138,17 +137,20 @@ def calc_rotmatrix(d1, d2):
 ##
 
 def make_uscope_rotation():
-    """Calculate the rotation maxtrix needed to convert
-    IDE Microscope (off-line) to IDE SampleStage (on-line)
+    """
+    Calculate and store the rotation maxtrix needed to convert
+    positions from the GSECARS IDE offline microscope (OSCAR)
+    to the IDE SampleStage in the microprobe station.
 
-    This calculates the rotation matrix based on all
-    positions names that occur in the Position List for
-    both instruments.
+    This calculates the rotation matrix based on all position
+    names that occur in the Position List for both instruments.
 
-    The result is saved as a json dictionary of the
-    IDE_Microscope instrument
+    Note:
+        The result is saved as a json dictionary of the
+        IDE_Microscope instrument
 
-    No arguments.
+    Note:
+        Please consult with Matt or Tony before running this!
     """
 
     d1 = read_uscope_xyz()
@@ -174,19 +176,21 @@ def make_uscope_rotation():
 #enddef
 
 def uscope2sample(suffix=''):
-    """transfer all named positions saved for the
-    IDE Microscope (off-line) to IDE SampleStage (on-line)
+    """
+    transfer *all* named positions saved for the GSECARS IDE offline
+    microscope (OSCAR) to the  IDE SampleStage in the microprobe station.
 
-    Applies the rotation matrix saved by the function
+    Applies the rotation matrix saved by the function `make_uscope_rotation()`
 
-      `make_uscope_rotation()`
+    Parameters:
+        suffix (string): suffix to apply when transferring names,
+            so as to avoid name clashes.
 
-    Arguments
-    ---------
-     suffix: string, default ''
-        suffix to apply when transferring names, so as
-        to avoid name clashes -- otherwise previously
-        saved positions named may be overwritten.
+    Example:
+        uscope2sample(suffix='_mount1')
+
+    Note:
+        Saved position names may be overwritten.
 
     """
     uscope = _scan._instdb.get_instrument('IDE_Microscope')
@@ -195,7 +199,7 @@ def uscope2sample(suffix=''):
         notes = json.loads(uscope.notes)
         rotmat = array(notes['rotmat2SampleStage'])
     except:
-        print(" Error:  could not get rotation matrix!")
+        print("Error: could not get rotation matrix!")
         return
     #endtry
     upos   = read_uscope_xyz()

@@ -8,6 +8,11 @@ def shutdown_server():
 #enddef
 
 
+def check_scan_abort():
+    "returns whether Abort has been requested"
+    return get_dbinfo('request_abort', as_bool=True)
+#enddef
+
 def low_flux():
    """
    Set to 'low flux' conditions
@@ -61,39 +66,4 @@ def focus50():
    consult Matt and Tony before using
    """
    move_instrument('Small KB Forces', 'focus_50um', wait=True)
-#enddef
-
-def set_SSA_hsize(val):
-   """
-   set SSA Horizontal beamsize, in microns.
-   Args:
-       val (float): SSA slit size in microns
-
-   Example:
-      set_SSA_hsze(50)
-   """
-   caput('13IDA:m70.VAL', val/1000.0)
-#enddef
-
-
-def feedback_off():
-    caput('13IDA:efast_pitch_pid.FBON', 0)
-    caput('13IDA:efast_roll_pid.FBON', 0)
-#enddef
-
-
-def detector_distance(val, pvname='13IDE:m19.VAL', wait=True):
-    """
-    Set Sample-detector distance
-
-    Args:
-        val (float):  Sample-detector distance in mm.
-        pvname (string): Epics PV for sample-detector distance ['13IDE:m19.VAL']
-        wait (True or False):  whether to wait for move to complete (True)
-
-    Example:
-        detector_distance(30)
-    """
-    print 'Moving Detector %s= %.3f (wait=%s)' % (pvname, val, wait)
-    return caput(pvname, val, wait=wait)
 #enddef

@@ -1,5 +1,6 @@
+..  _starting-chapter:
 
-GUI Windows
-==============
+Getting Started at the Beamline
+======================================
 
 Screenshots

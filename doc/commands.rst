@@ -1,4 +1,4 @@
-..  _macros-chapter:
+..  _commands-chapter:
 
 =========================
 Available Commands
@@ -8,10 +8,6 @@ Being able to script data collection by writing a ``macro`` or **script**
 of commands to execute is an important part of the EpicsScan data
 collection system.  All of the commands described here can either be
 executed one at a time from the command line, or run in a script.
-
-
-.. module:: macrocode
-
 
 
 
@@ -27,6 +23,11 @@ Several commands allow you to move the sample to a desired location<.
 .. autofunction:: move_samplestage
 
 .. autofunction:: move_fine
+
+
+.. module:: uscope
+
+.. autofunction:: uscope2sample
 
 
 Moving the Monochromator Energy
@@ -98,7 +99,7 @@ a script.
 
 
 
-X-ray Diffraction Commands
+Collecting X-ray Diffraction Images
 =======================================
 
 .. automodule:: xrd
@@ -109,7 +110,7 @@ X-ray Diffraction Commands
 .. autofunction:: xrd_bgr
 
 
-Commands to Control X-ray beam intensity
+Controlling the X-ray beam intensity
 ===========================================
 
 .. automodule:: intensity
@@ -128,17 +129,21 @@ Commands to Control X-ray beam intensity
 .. autofunction:: autoset_i2amp_gain
 
 
+Moving Other Beamline Instruments
+==============================================
+
+.. module:: instruments
+   :synopsis:  instruments
+
+.. autofunction:: detector_distance
+.. autofunction:: set_SSA_hsize
+.. autofunction:: move_instrument
+
+
+
 The Pre-Scan Command
 =======================================
 
 .. automodule:: pre_scan_command
 
 .. autofunction:: pre_scan_command
-
-
-
-Other Commands
-=======================================
-
-.. module:: common
-   :synopsis: miscellaneous commands

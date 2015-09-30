@@ -6,6 +6,10 @@ Scanning Commands
 
 """
 
+from common import check_scan_abort
+from energy import move_energy
+from samplestage import move_samplestage
+
 def pos_scan(posname, scanname, datafile=None, number=1):
     """
     move sample to a Named Position from SampleStage Positions list
@@ -46,7 +50,7 @@ def pos_map(posname, scanname):
     move_samplestage(posname, wait=True)
     sleep(1.0)
     datafile = '%s_%s.001' % (scanname, posname)
-    do_slewscan(scanname, filename=datafile, number=1)
+    do_slewscan(scanname, filename=datafile)
 #enddef
 
 
@@ -83,7 +87,7 @@ def _getPV(mname):
     return known.get(mname.lower(), None)
 #enddef
 
-def _scanloop(scanname, datafile, motorname, vals):
+def _scanloop(scanname, datafile, motorname, vals, number=1):
     """
     run a named scan at each point for a named motor.
     expected to be used internally.
@@ -93,6 +97,7 @@ def _scanloop(scanname, datafile, motorname, vals):
         datafile (string): name of datafile (must be given)
         motorname (string): name of motor
         vals (list or array of floats): motor values at which to do scan.
+        number(int): number of scan repeats at each point
 
     Example:
         _scanloop('Fe_XAFS', 'sample1_', 'x', [-0.1, 0.0, 0.1])
@@ -113,13 +118,13 @@ def _scanloop(scanname, datafile, motorname, vals):
     filename = '%s_%s_%s.001' % (scanname, datafile, motorname)
     for i, val in enumerate(vals):
         caput(motor, val, wait=True)
-        do_scan(scanname,  filename=filename, number=1)
+        do_scan(scanname,  filename=filename, nscans=number)
         if check_scan_abort(): return
     #endfor
 #enddef
 
 def line_scan(scanname, datafile, motor='x',
-              start=0, stop=0.1, step=0.001):
+              start=0, stop=0.1, step=0.001, number=1):
     """
     run a named scan (or map) at each point in along a line
 
@@ -130,23 +135,25 @@ def line_scan(scanname, datafile, motor='x',
         start (float): starting motor value [0]
         stop (float): ending motor value [0.100]
         step (float): step size for motor [0.001]
-
+        number(int): number of scan repeats at each point
     Example:
-        line_scan('Fe_XAFS', 'sample1', motor='x', start=0, stop=0.05, step=0.005)
+        line_scan('Fe_XAFS', 'sample1', motor='x', start=0, stop=0.05, step=0.005, number=2)
 
     Note:
        output files will named `<scanname>_<datafile>_<x>I.001`  where I will
        increment 1, 2, 3, and so on.
 
        For the example above, the files will be named 'Fe_XAFS_sample1_x1.001',
-       'Fe_XAFS_sample1_x2.001', 'Fe_XAFS_sample1_x3.001', and so on.
+       'Fe_XAFS_sample1_x1.002', 'Fe_XAFS_sample1_x2.001', 'Fe_XAFS_sample1_x2.002',
+       'Fe_XAFS_sample1_x3.001', 'Fe_XAFS_sample1_x2.002', and so on.
 
     See Also:
        grid_scan
 
     """
     vals = linspace(start, stop, (abs(start-stop)+0.2*step)/abs(step))
-    _scanloop(scanname, datafile, motor, vals)
+
+    _scanloop(scanname, datafile, motor, vals, number=number)
 #enddef
 
 
@@ -298,4 +305,3 @@ def grid_xrd(datafile, t=5, x='x', y='y',
         #endfor
     #endfor
 #enddef
-

@@ -81,7 +81,7 @@ def _getPV(mname):
              'energy':  '13IDE:En:Energy',
              }
     return known.get(mname.lower(), None)
-#endef
+#enddef
 
 def _scanloop(scanname, datafile, motorname, vals):
     """
@@ -146,7 +146,6 @@ def line_scan(scanname, datafile, motor='x',
 
     """
     vals = linspace(start, stop, (abs(start-stop)+0.2*step)/abs(step))
-
     _scanloop(scanname, datafile, motor, vals)
 #enddef
 
@@ -299,3 +298,4 @@ def grid_xrd(datafile, t=5, x='x', y='y',
         #endfor
     #endfor
 #enddef
+

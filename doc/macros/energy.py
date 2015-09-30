@@ -1,7 +1,8 @@
 """
 Commands for moving the monochromator energy and related tasks.
-
 """
+from intensity import set_mono_tilt
+
 def move_energy(energy, id_offset=None, id_harmonic=None, wait=True):
     """
     move energy to desired value, optionally specifying

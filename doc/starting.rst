@@ -89,7 +89,8 @@ which will bring up a window that looks
     :width: 80%
 
 This will allow you to identify peaks in an XRF spectrum, re-start the
-spectrum acquisition, and read conts in each pre-defined ROI.
+spectrum acquisition.  Counts and Counts-per-second can be read in the
+status bar at the bottom of the screen.
 
 ..  _starting-samplestage:
 
@@ -104,16 +105,37 @@ be launched with the desktop icon
     :width: 30px
 
 
-
 This will bring up a window that looks like
 
 .. image:: _images/SampleStage_control.png
     :width: 80%
 
 
-This has nearly the same interface as the :ref:`Offline Microscope (OSCAR)
-<oscar-chapter>`, though the Sample Stage has more stages, a slightly
-better camera but it is more difficult to change the magnification.
+From here you can drive the stages around with the controls for the Sample
+Stage Motors on the upper left portion of the window, and adjust the camera
+settings in the lower left portion of the window.  In the upper right, you
+can type any name and hit **Save** to save the current position of all the
+motors, and save the optical image.  This will build a list of Saved
+Positions in the right hand side.  You can select any of these, and then
+hit **Go To** to move that Saved Position.
+
+The Sample Stage shows a live image of the On-line sample microscope, with
+an approximately 500 micron field of view.  It also shows a circle
+(approximately 10 microns across) at the center of the image, and a 100
+micron scalebare in the lower right.  The color and size of these can be
+adjusted from the Options menu.
+
+You can click on any spot on the the image and then hit the **Bring to
+Center** button in the lower left.  This will move the selected spot to the
+center of the image.  Generally, this will be close to the location of the
+X-ray beam.
+
+The Saved Positions from the Sample Stage can be accessed from the Command
+Window from the main Epics Scan Window.   If you use the :ref:`Offline
+Microscope (OSCAR) <oscar-chapter>`, you will notice that it has a very
+similar interface.  In addition, the list of Sample Positions from the
+Offline Microscope can be transferred to the SampleStage.
+
 
 ..  _starting-instruments:
 

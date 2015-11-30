@@ -116,13 +116,49 @@ With the Position essentially fixed to a few microns at the Secondary
 Source point, the position of the final focus beam is very good, even over
 large energy moves.  Unless we bump something on the table, that is.
 
-
+..  _beamline-stages:
 
 Sample Stage
 ===================
 
 In the Microprobe station, the sample normally sits at 45 degrees to the
-incident beam, and is held in place by a large Sample Stage.
+incident beam, and is held in place by a large Sample Stage.  This stage
+has 5 axes, and sometimes a 6th is added.  The three largest stages are
+orthogonal and at 45 degrees to the beam, so that they give motion along
+Cartesian coordinates relative to the microscope, and are called the
+*Coarse Stages*, though the precision of these stages is actually 1 micron.
+Here, *Coarse X* is horizontal and in the microscope focal plane, *Coarse
+Y* is vertical and in the microscope focal plane, and *Coarse Z* moves the
+Sample normal to the microscope focal plane (and so is often referreed to
+as *Focus*).  The *Coarse X* and *Coarse Z* motions have 200 mm of travel,
+and the *Coarse Y* (vertical) stage has 300 mm of travel.
+
+In addition, there are two smaller stages hung from the large orthogonal
+stack giving *Fine X* and *Fine Y*.  These stages are smaller and higher
+precision (better than 0.1 micron) than the coarse stages, and closer to
+the sample holder.  This means that moving just these fine stages can give
+much more accurate and reproducible motions of the sample.  However, these
+stages have much less travel range (25 mm for *Fine X* and 5 mm for *Fine
+Y*), so both the coarse and fine stages are necessary to access all samples
+on most sample mounts.
+
+
+The sample mounts are typically plastic holders that can hold either
+microscope slides or 1 inch round sections.  These holders mount to the
+stages with a magnetic kinematic mount, that are strong enough to hold many
+samples and reproducible to 10 to 25 microns (that is, you can take the
+sample holder off and put it back on and the sample will return to within
+25 microns of its earlier position).  For some measurements, notably
+fluorescence tomography, a rotation stage *Theta* is added to the stack of
+fine stages, and samples are attached to a goniometer head centered on this
+rotation stage.
+
+In all cases, the sample mounts hang down from the fine stages, which are
+also mounted from above.  This gives plenty of working space below the
+sample holder and also allows gravity to be a stabilizing force.
+
+
+
 
 
 Sample Microscope

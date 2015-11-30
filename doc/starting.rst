@@ -136,21 +136,26 @@ Microscope (OSCAR) <oscar-chapter>`, you will notice that it has a very
 similar interface.  In addition, the list of Sample Positions from the
 Offline Microscope can be transferred to the SampleStage.
 
-
 ..  _starting-instruments:
 
 Epics Instruments Application
 ---------------------------------------------
 
 This application gives an easy-to-use way to drive beamline instruments,
-and to move these between pre-defined positions.  It can
-be launched with the desktop icon
+and to move these between pre-defined positions.  Like the SampleStage, it
+allows you to save any position by name and then return to it later.
+It can be launched with the desktop icon
 
 .. image:: _images/instruments_icon.png
     :width: 30px
 
 which will bring up a window that looks like
 
+.. image:: _images/EpicsInstruments.png
+    :width: 80%
+
+Note that this application can be a bit slow to initialize, but then should
+run without problem.
 
 ..  _starting-caqtdm:
 
@@ -158,4 +163,14 @@ Epics Display Manager (caQtDM) Application
 ---------------------------------------------
 
 This application shows many *low level* screens for the Epics control
-system.
+system. It can be launched with the desktop icon
+
+.. image:: _images/caqtdm_icon.png
+    :width: 30px
+
+From the Start Window many other displays can be opened, giving low-level
+access to beamline components.  You will want to open choose **13IDE
+Experiments** then **13IDE Microprobe** to bring up a screen that looks like
+
+.. image:: _images/caqtdm_13ide.png
+    :width: 80%

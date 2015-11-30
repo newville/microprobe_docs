@@ -12,7 +12,6 @@ document describes the software used for operating the X-ray Microprobe.
    :maxdepth: 2
 
    beamline
-   overview
    starting
    xrfmaps
    xas

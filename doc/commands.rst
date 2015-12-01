@@ -24,10 +24,18 @@ Several commands allow you to move the sample to a desired location<.
 
 .. autofunction:: move_fine
 
+Getting Positions from OSCAR to the Sample Stage
+======================================================
+
+These commands help move coordinates saved with OSCAR (the off-line
+microscope) to the Samplestage.
+
 
 .. module:: uscope
 
 .. autofunction:: uscope2sample
+
+.. autofunction:: make_uscope_rotation
 
 
 Moving the Monochromator Energy

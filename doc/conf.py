@@ -19,7 +19,8 @@ sys.path.insert(0, 'macros')
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.mathjax',
               'sphinx.ext.linkcode',
-              'sphinx.ext.napoleon',
+              'sphinxcontrib.napoleon',
+              'sphinxcontrib.argdoc',
               'numpydoc']
 
 extensions.extend(['fix_equation_ref', 'subfig', 'numfig', 'numsec'])

@@ -85,7 +85,7 @@ the X-ray Fluorescence detector.  It can be launched with the desktop icon
 
 which will bring up a window that looks
 
-.. image:: _images/XRFcontrol.png
+.. image:: _images/XRFControl.png
     :width: 80%
 
 This will allow you to identify peaks in an XRF spectrum, re-start the
@@ -107,7 +107,7 @@ be launched with the desktop icon
 
 This will bring up a window that looks like
 
-.. image:: _images/SampleStage_control.png
+.. image:: _images/SampleStage_Control.png
     :width: 80%
 
 

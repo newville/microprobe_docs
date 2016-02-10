@@ -1,7 +1,7 @@
 """
 Commands for moving the monochromator energy and related tasks.
 """
-from intensity import set_mono_tilt
+from intensity import set_mono_tilt, autoset_i0amp_gain
 
 def move_energy(energy, id_offset=None, id_harmonic=None, wait=True):
     """
@@ -128,18 +128,19 @@ def mirror_stripe(name='silicon', wait=True):
         mirror_stripe('rh')
 
     """
-    SCALE = 8.0
-    value = 0.0
-    if name.lower().startswith('r'): value =  1.0
-    if name.lower().startswith('p'): value = -1.0
-    value = value * SCALE
-    caput('13IDA:m10.VAL', value, wait=False)
-    caput('13IDA:m11.VAL', value, wait=False)
-    caput('13IDA:m12.VAL', value, wait=False)
+    mirror_vals = {'s': (-0.2, -0.4, 0.), 
+                   'r': (10.4, 10.2, 10.6),
+                   'p': (-8.0, -8.2, -7.8)}
+
+    name = name[0].lower()
+    vals = mirror_vals[name]
+    caput('13IDA:m10.VAL', vals[0], wait=False)
+    caput('13IDA:m11.VAL', vals[1], wait=False)
+    caput('13IDA:m12.VAL', vals[2], wait=False)
     if wait:
-        caput('13IDA:m10.VAL', value, wait=True)
-        caput('13IDA:m11.VAL', value, wait=True)
-        caput('13IDA:m12.VAL', value, wait=True)
+        caput('13IDA:m10.VAL', vals[0], wait=True)
+        caput('13IDA:m11.VAL', vals[1], wait=True)
+        caput('13IDA:m12.VAL', vals[2], wait=True)
     #endif
 #enddef
 
@@ -200,7 +201,7 @@ def move_to_edge(element, edge='K', id_harmonic=None, id_offset=None,
         if energy <  5300:  foil = 'Au'
         if energy <  2900:  foil = 'Al'
     #endif
-
+    # print(" --  Move to Edge Foil=", foil, energy)
     bpm_foil(foil)
 
     # guess mirror stripe
@@ -226,41 +227,80 @@ def move_to_edge(element, edge='K', id_harmonic=None, id_offset=None,
     #endif
 #enddef
 
-def move_to_map():
-    "move to 10.5 keV"
-    move_to_edge('Ga', id_offset=0.110, id_harmonic=3)
-    move_energy(10500.0, id_offset=0.110)
+def move_to_map_10500():
+    "move to 10500 eV"
+    caput('13IDA:DAC1_7.VAL', 4.7)
+    caput('13IDA:DAC1_8.VAL', 3.6)
+    move_to_edge('Ga', 'K', id_offset=0.119, id_harmonic=3, with_tilt=False)
+    move_energy(10500.0, id_offset=0.119)
+    set_i0amp_gain(2, 'nA/V')
+    set_mono_tilt()
+#enddef
+
+def move_to_18kev():
+    "move to 18.0 keV "
+    move_to_edge('Zr', id_offset=0.210, id_harmonic=3, with_tilt=False)
+    set_i0amp_gain(2, 'nA/V')
+    move_energy(18000.0, id_offset=0.210)
+    set_mono_tilt()
 #enddef
 
 def move_to_xrd():
     "move to 18.0 keV "
-    move_to_edge('Zr', id_offset=0.175, id_harmonic=3, with_tilt=False)
+    move_to_edge('Zr', id_offset=0.1800, id_harmonic=3, with_tilt=False)
     set_i0amp_gain(2, 'nA/V')
-    move_energy(18000.0, id_offset=0.175)
+    move_energy(18000.0, id_offset=0.180)
     set_mono_tilt()
+#enddef
+
+def move_to_map():
+    "move to 12.5 keV  "
+    move_to_edge('Se', 'K',  with_tilt=False)
+    set_i0amp_gain(2, 'nA/V')
+    move_energy(12500.0, id_offset=0.14)
+    set_mono_tilt()
+#enddef
+
+def move_to_u():
+    "move to U L3 Edge"
+    set_i0amp_gain(2,  'nA/V')
+    move_to_edge('U', 'L3', id_offset=0.175, id_harmonic=3)
+#enddef
+
+def move_to_pb():
+    "move to Pb L3 Edge"
+    move_to_edge('Pb', 'L3', id_offset=0.145, foil='Ni')
+    autoset_i0amp_gain()
 #enddef
 
 def move_to_ti():
     "move to Ti K Edge"
-    move_to_edge('Ti', id_offset=0.050, foil='Al',   id_harmonic=1, with_tilt=False)
-    set_mono_tilt(enable_fb_roll=True, enable_fb_pitch=False)
+    set_i0amp_gain(10, 'nA/V')
+    move_to_edge('Ti', id_offset=0.050, foil='Au')
+    set_mono_tilt()
 #enddef
 
 def move_to_v():
     "move to V K Edge"
-    set_i0amp_gain(20, 'nA/V')
-    move_to_edge('V')
+    move_to_edge('V', id_offset=0.040)
 #enddef
 
 def move_to_cr():
     "move to Cr K Edge"
-    move_to_edge('Cr')
+    set_i0amp_gain(10, 'nA/V')
+    move_to_edge('Cr', id_offset=0.070, foil='Ti')
 #enddef
 
 def move_to_mn():
     "move to Mn K Edge"
     set_i0amp_gain(10, 'nA/V')
-    move_to_edge('Mn')
+    move_to_edge('Mn', id_offset=0.062)
+#enddef
+
+def move_to_hg():
+    "move to Hg L3 Edge"
+    set_i0amp_gain(2, 'nA/V')
+    move_to_edge('Hg','L3', id_offset=0.128)
 #enddef
 
 def move_to_eu():
@@ -271,10 +311,8 @@ def move_to_eu():
 
 def move_to_fe():
     "move to Fe K Edge"
-    set_i0amp_gain(50,  'nA/V')
-    caput('13IDA:DAC1_7.VAL', 4.0)
-    caput('13IDA:DAC1_8.VAL', 5.0)
-    move_to_edge('Fe', id_offset=0.060)
+    set_i0amp_gain(10,  'nA/V')
+    move_to_edge('Fe', id_offset=0.070)
 #enddef
 
 def move_to_s():
@@ -291,7 +329,7 @@ def move_to_s():
 
 def move_to_cu():
     "move to Cu K Edge"
-    set_i0amp_gain(20, 'nA/V')
+    set_i0amp_gain(5, 'nA/V')
     move_to_edge('Cu', id_offset=0.090, id_harmonic=1)
 #enddef
 
@@ -329,8 +367,15 @@ def move_to_mo():
 
 def move_to_as():
     "move to As K edge"
-    set_i0amp_gain(5, 'nA/V')
-    move_to_edge('As', id_offset=0.100)
+    set_i0amp_gain(2, 'nA/V')
+    move_to_edge('As', id_offset=0.117)
+#enddef
+
+def move_to_se():
+    "move to Se K edge"
+    set_i0amp_gain(2, 'nA/V')
+    set_i1amp_gain(2, 'nA/V')
+    move_to_edge('Se', id_offset=0.178)
 #enddef
 
 def move_to_w():

@@ -31,7 +31,6 @@ from collections import OrderedDict
 #                 password='microXAFS@13IDE')
 # #endif
 
-
 def read_uscope_xyz(name='IDE_Microscope'):
     """
     read XYZ Positions from IDE Microscope Instrument
@@ -39,11 +38,14 @@ def read_uscope_xyz(name='IDE_Microscope'):
     """
     out = OrderedDict()
     instdb = _scan._instdb
+    scandb = _scan._scandb
     for pname in instdb.get_positionlist(name):
-        thispos = instdb.get_position(name, pname)
-        vals = [float(p.value) for p in thispos.pvs]
-        out[pname] = vals
+        v =  instdb.get_position_vals(name, pname)
+        out[pname]  = [v['13IDE:m1.VAL'],
+                       v['13IDE:m2.VAL'],
+                       v['13IDE:m3.VAL']]
     #endfor
+
     return out
 #enddef
 
@@ -57,10 +59,10 @@ def read_sample_xyz(name='IDE_SampleStage'):
     out = OrderedDict()
     instdb = _scan._instdb
     for pname in instdb.get_positionlist(name):
-        thispos = instdb.get_position(name, pname)
-        vals = [float(p.value) for p in thispos.pvs]
-        vals = [vals[3], vals[5], vals[4]]
-        out[pname] = vals
+        v = instdb.get_position_vals(name, pname)
+        out[pname]  = [v['13XRM:m4.VAL'],
+                       v['13XRM:m6.VAL'],
+                       v['13XRM:m5.VAL']]
     #endfor
     return out
 #enddef
@@ -104,6 +106,8 @@ def calc_rotmatrix(d1, d2):
 
         return None, None, None
     #endif
+    print("Calculating Rotation Matrix using Labels:")
+    print(labels)
     v1 = ones((4, len(labels)))
     v2 = ones((4, len(labels)))
     for i, label in enumerate(labels):
@@ -128,6 +132,8 @@ def calc_rotmatrix(d1, d2):
 
     fit_result = minimize(resid_rotmatrix, params, args=(mat, v1, v2))
     mat = params2rotmatrix(params, mat)
+    print(" Calculated Rotation Matrix:")
+    print(mat)
     return mat, v1, v2
 #enddef
 
@@ -149,7 +155,7 @@ def make_uscope_rotation():
         The result is saved as a json dictionary of the
         IDE_Microscope instrument
 
-    Note:
+    Warning:
         Please consult with Matt or Tony before running this!
     """
 
@@ -175,7 +181,7 @@ def make_uscope_rotation():
     return mat
 #enddef
 
-def uscope2sample(suffix=''):
+def uscope2sample(suffix='', xoffset=0, yoffset=0, zoffset=0):
     """
     transfer *all* named positions saved for the GSECARS IDE offline
     microscope (OSCAR) to the  IDE SampleStage in the microprobe station.
@@ -185,12 +191,18 @@ def uscope2sample(suffix=''):
     Parameters:
         suffix (string): suffix to apply when transferring names,
             so as to avoid name clashes.
+        xoffset (float, default=0):  offset in X, after coordinate transform
+        yoffset (float, default=0):  offset in Y, after coordinate transform
+        zoffset (float, default=0):  offset in Z, after coordinate transform
 
     Example:
         uscope2sample(suffix='_mount1')
 
     Note:
         Saved position names may be overwritten.
+        
+        Non-zero values for xoffset, yoffset, zoffset can accomodate for
+        offsets for IDE SampleStage, due to changes in mirror pitch.
 
     """
     uscope = _scan._instdb.get_instrument('IDE_Microscope')
@@ -216,17 +228,21 @@ def uscope2sample(suffix=''):
     pred = dot(rotmat, v)
 
     # make SampleStage coordinates
-    stage = _scan._instdb.get_instrument('IDE_SampleStage')
+    poslist = _scan._instdb.get_positionlist('IDE_SampleStage')
+    pos0    = _scan._instdb.get_position_vals('IDE_SampleStage', poslist[0])
+    pvs = pos0.keys()
+    pvs.sort()
     spos = OrderedDict()
-    for pv in stage.pvs:
-        spos[pv.name] = 0.000
+    for pvname in pvs:
+        spos[pvname] = 0.000
     #endfor
     xpv, ypv, zpv = '13XRM:m4.VAL', '13XRM:m6.VAL', '13XRM:m5.VAL'
     for i, label in enumerate(labels):
-        spos[xpv] = pred[0, i]
-        spos[ypv] = pred[1, i]
-        spos[zpv] = pred[2, i]
+        spos[xpv] = pred[0, i] + xoffset
+        spos[ypv] = pred[1, i] + yoffset
+        spos[zpv] = pred[2, i] + zoffset
         nlabel = '%s%s' % (label, suffix)
         _scan._instdb.save_position('IDE_SampleStage', nlabel, spos)
     #endfor
 #enddef
+

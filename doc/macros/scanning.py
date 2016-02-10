@@ -6,6 +6,7 @@ Scanning Commands
 
 """
 
+from xrd import save_xrd
 from common import check_scan_abort
 from energy import move_energy
 from samplestage import move_samplestage
@@ -211,14 +212,15 @@ def grid_scan(scanname, datafile, x='x', y='y',
     #endfor
 #enddef
 
-def redox_map(scanname, datafile=None,
+def redox_map(posname, scanname, datafile=None,
               energies=[5460, 5467.5, 5469, 5485.9, 5493.3, 5600]):
     """
     repeat a scan or map at multiple energies
 
     Parameters:
+        posname (string): position name
         scanname (string):  scan name
-        datafile (string or None): name for datafile
+  
         energies (list of floats):   list of energies (in eV) to run map scan at
 
     Example:
@@ -232,14 +234,17 @@ def redox_map(scanname, datafile=None,
         'MyMap_sampleX_5500.0eV.001',
 
     """
+    move_samplestage(posname, wait=True)
+
     if datafile is None:
-        datafile = scanname
+        datafile = '%s_%s.001' % (scanname, posname)
     #endif
 
     for en in energies:
         move_energy(en)
         dfile = '%s_%.1feV.001' % (datafile, en)
-        do_scan(scan,  filename=dfile)
+        print "Start Map ", scanname, " Filename ", dfile
+        do_scan(scanname,  filename=dfile)
         if check_scan_abort():  return
     #endfor
 #enddef
@@ -284,9 +289,10 @@ def grid_xrd(datafile, t=5, x='x', y='y',
     yname = y
     xname = x
 
-    xvals = linspace(xstart, xstop, (abs(xstart-xstop)+0.2*xstep)/abs(xstep))
-    yvals = linspace(ystart, ystop, (abs(ystart-ystop)+0.2*ystep)/abs(ystep))
+    xvals = linspace(xstart, xstop, (abs(xstart-xstop)+1.01*xstep)/abs(xstep))
+    yvals = linspace(ystart, ystop, (abs(ystart-ystop)+1.01*ystep)/abs(ystep))
 
+    xmotor = _getPV(xname)
     ymotor = _getPV(yname)
     if ymotor is None:
         print("Error: cannot find motor named '%s'" % yname)

@@ -1,3 +1,5 @@
+### from epics import caput, caget
+
 def detector_distance(val, pvname='13IDE:m19.VAL', wait=True):
     """
     Set Sample-detector distance in mm.
@@ -12,6 +14,15 @@ def detector_distance(val, pvname='13IDE:m19.VAL', wait=True):
     """
     print 'Moving Detector %s= %.3f (wait=%s)' % (pvname, val, wait)
     return caput(pvname, val, wait=wait)
+#enddef
+
+
+def dxd(val, pvname='13IDE:m19.VAL', wait=True):
+    """
+    m
+    """
+    print 'This is DXD'
+    #     return caput(pvname, val, wait=wait)
 #enddef
 
 
@@ -64,3 +75,40 @@ def move_instrument(inst_name, position_name, wait=False,
         #endif
     #endif
 #enddef
+
+def smallkb_stripes(stripe_name):
+    """move small KB mirrors to a metal stripe by name
+
+    Parameters:
+        stripe_name (string): name of stripe, one of 'S', 'R', or 'P'
+
+    Examples:
+        smallkb_stripes('silicon')
+
+    Note:
+        requires a working Epics Instrument program to be running.
+
+    """
+    stripes = {'s':'silicon stripes',
+               'r': 'rhodium stripes',
+               'p': 'platinum stripes'}
+    name = stripes.get(stripe_name.lower()[0], None)
+    if name is None:
+        print 'Unknown stripe name ', stripe_name
+    else:
+        move_instrument('Small KB Mirror Stripes', name, wait=True)
+    #endif
+#enddef
+
+def focus_2um():
+    """move small KB mirrors to 2 microns
+    """
+    move_instrument('Small KB Forces', 'focus_2um', wait=True)
+#enddef
+
+def focus_50um():
+    """move small KB mirrors to 50 microns
+    """
+    move_instrument('Small KB Forces', 'focus_50um', wait=True)
+#enddef
+

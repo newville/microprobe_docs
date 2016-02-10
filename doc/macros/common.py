@@ -50,6 +50,15 @@ def focus2():
    move_instrument('Small KB Forces', 'focus_2um', wait=True)
 #enddef
 
+def focus5():
+   """
+   Focus beam to approximately 10 microns.
+   Note that details vary for each user, and you should
+   consult Matt and Tony before using
+   """
+   move_instrument('Small KB Forces', 'focus_5um', wait=True)
+#enddef
+
 def focus10():
    """
    Focus beam to approximately 10 microns.
@@ -59,11 +68,4 @@ def focus10():
    move_instrument('Small KB Forces', 'focus_10um', wait=True)
 #enddef
 
-def focus50():
-   """
-   Focus beam to approximately 50 microns.
-   Note that details vary for each user, and you should
-   consult Matt and Tony before using
-   """
-   move_instrument('Small KB Forces', 'focus_50um', wait=True)
-#enddef
+

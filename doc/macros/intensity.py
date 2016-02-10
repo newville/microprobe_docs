@@ -1,13 +1,29 @@
 """
 Commands for setting intensities and Ion Chamber gains
 """
-
+import time
 def feedback_off():
     """
     Turn intensity feedback off
     """
-    caput('13IDA:efast_pitch_pid.FBON', 0)
+    caput('13IDA:efast_pitch_pid.FBON', 0) 
+    caput('13XRM:edb:use_fb', 0)
     caput('13IDA:efast_roll_pid.FBON', 0)
+#enddef
+
+def feedback_on(roll=True, pitch=True):
+    """
+    Turn intensity feedback on or off 
+    
+    roll = True / False for roll feedback
+    pitch = True / False for pitch feedback
+    """
+    caput('13IDA:efast_pitch_pid.FBON', 0)
+    caput('13XRM:edb:use_fb', 0)
+    caput('13IDA:efast_roll_pid.FBON', 0)
+    if pitch: caput('13XRM:edb:use_fb', 1)
+    if roll:  caput('13IDA:efast_roll_pid.FBON', 0)
+    
 #enddef
 
 def optimize_id():
@@ -18,28 +34,32 @@ def optimize_id():
     Example:
         optimize_id()
     """
-
-    mono_energy = caget('13IDE:En:Energy')  / 1000.0
-    id_harmonic = caget('13IDE:En:id_harmonic')
-    offset = (10 * mono_energy + 2*(id_harmonic-1)) / 1000.0
-    offset = max(0.010, offset)
-
-    idvals = mono_energy + linspace(0, 2, 21)*offset
-    caput('ID13us:ScanEnergy', mono_energy-offset)
-    sleep(3.0)
-    best_id = ivals[10]
-    best_i0  = 0.0
-    for idval in idvals:
-       caput('ID13us:ScanEnergy', idval)
+    caput('13IDE:En:id_track', 0)
+    und_energy  = caget('ID13us:ScanEnergy')
+    mono_energy = caget('13IDE:En:Energy') 
+    energies = linspace(-75, 75, 31) + mono_energy
+    caput('13IDE:En:Energy', energies[0])
+    sleep(2.0)
+    best_en  = mono_energy
+    best_i0  = -10.0
+    i0vals = []
+    for en in energies:
+       caput('13IDE:En:Energy', en, wait=True)
        sleep(1.00)
-       caget('13IDE:scaler1.S2', i0)
-       if i0 > best_i0:
-          best_i0 = i0
-          best_id = idval
+       i0val = caget('13IDE:scaler1.S2')
+       i0vals.append(i0val)
+       if i0val > best_i0:
+         best_i0 = i0val
+         best_en = en
        #endif
     #endfor
-    print 'best ID ', best_i0, best_id
+    caput('13IDE:En:id_track', 1)
+    offset = und_energy - best_en*0.001 
+    print 'best ID offset = %.3f keV ' % offset
+    caput('13IDE:En:id_off', offset)
+    caput('13IDE:En:Energy', best_en) 
 #enddef
+
 
 
 def collect_offsets(t=10):
@@ -174,12 +194,13 @@ def autoset_gain(prefix='13IDE:A1', scaler='13IDE:scaler1.S2', offset=100, count
 
     ## make sure scaler is in autocount mode and that time is 1 sec
     sprefix  = scaler.split('.')[0]
-    caput('%s.CONT' % sprefix, 1)
+    caput('%s.CONT' % sprefix, 0)
     caput('%s.TP1'  % sprefix, 1.0)
-
+    caput('%s.TP'   % sprefix, 1.0)
+    caput('%s.CNT'  % sprefix, 1, wait=True)
     unit = caget("%ssens_unit.VAL" % prefix)
     sens = caget("%ssens_num.VAL"  % prefix)
-    sleep(0.25)
+    sleep(0.01)
     i0 = caget(scaler)
     if i0 > 400000:
        sens = sens + 1
@@ -198,9 +219,9 @@ def autoset_gain(prefix='13IDE:A1', scaler='13IDE:scaler1.S2', offset=100, count
     #endif
     ## check that we haven't gone out of range
     if unit < 0 or unit > 3:
+        print(" Unit out of range ", unit)
         return False
     #endif
-
     caput("%ssens_unit.VAL" % prefix, unit)
     caput("%ssens_num.VAL"  % prefix, sens)
 
@@ -220,7 +241,8 @@ def autoset_gain(prefix='13IDE:A1', scaler='13IDE:scaler1.S2', offset=100, count
     caput("%soff_u_put.VAL"   % prefix, offset)
     caput("%sinit.PROC"       % prefix, 1)
 
-    sleep(2.00)
+    caput('%s.CNT'  % sprefix, 1, wait=True)
+    sleep(0.010)
     i0 = caget(scaler)
     if (i0 < 80000) or (i0 > 400000):
        ok = autoset_gain(prefix=prefix, scaler=scaler, offset=offset, count=count+1)
@@ -228,19 +250,27 @@ def autoset_gain(prefix='13IDE:A1', scaler='13IDE:scaler1.S2', offset=100, count
            return False
        #endif
     #endif
+    caput('%s.CONT' % sprefix, 1)
+    caput('%s.CNT'  % sprefix, 1)
     return True
 #enddef
 
 def autoset_i0amp_gain():
     autoset_gain(prefix='13IDE:A1', scaler='13IDE:scaler1.S2', offset=100)
+    caput('13IDE:scaler1.CONT', 1)
+    caput('13IDE:scaler1.CNT', 1)
 #enddef
 
 def autoset_i1amp_gain():
     autoset_gain(prefix='13IDE:A2', scaler='13IDE:scaler1.S3', offset=100)
+    caput('13IDE:scaler1.CONT', 1)
+    caput('13IDE:scaler1.CNT', 1)
 #enddef
 
 def autoset_i2amp_gain():
     autoset_gain(prefix='13IDE:A3', scaler='13IDE:scaler1.S4', offset=-100)
+    caput('13IDE:scaler1.CONT', 1)
+    caput('13IDE:scaler1.CNT', 1)
 #enddef
 
 def find_max_intensity(readpv, drivepv, vals, minval=0.1):
@@ -264,7 +294,7 @@ def find_max_intensity(readpv, drivepv, vals, minval=0.1):
     i0max = caget(readpv)
     for val in _orig+vals:
         caput(drivepv, val)
-        sleep(0.1)
+        sleep(0.08)
         i0 = caget(readpv)
         if i0 > i0max:
             i0max, _best = i0, val
@@ -273,6 +303,7 @@ def find_max_intensity(readpv, drivepv, vals, minval=0.1):
     #endfor
     if i0max < minval: _best = _orig
     caput(drivepv, _best)
+    sleep(0.25)
     return i0max, _best
 #enddef
 
@@ -293,8 +324,9 @@ def set_mono_tilt(enable_fb_roll=True, enable_fb_pitch=False):
             3. adjusting pitch to maximize intensity at I0 Ion Chamber
 
     """
-    print 'Set Mono Tilt 24-Sep-2015'
+    print 'Set Mono Tilt 6-Nov-2015'
     with_roll = True
+    t0 = systime()
     tilt_pv = '13IDA:DAC1_7.VAL'
     roll_pv = '13IDA:DAC1_8.VAL'
     i0_pv   = '13IDE:IP330_1.VAL'
@@ -314,42 +346,41 @@ def set_mono_tilt(enable_fb_roll=True, enable_fb_pitch=False):
     # find best tilt value with BPM sum
     out = find_max_intensity(sum_pv, tilt_pv, linspace(-2.5, 2.5, 101))
     if get_dbinfo('request_abort', as_bool=True): return
-    print '  Best Pitch (BPM): %.3f at %.3f ' % (out)
-    sleep(0.5)
+    # print '  Best Pitch (BPM): %.3f at %.3f ' % (out)
 
     # find best tilt value with IO
     out = find_max_intensity(i0_pv, tilt_pv, linspace(-1, 1, 51))
     if get_dbinfo('request_abort', as_bool=True): return
     print '  Best Pitch (I0): %.3f at %.3f ' % (out)
-    sleep(0.5)
 
     # find best roll with I0
     if with_roll:
-        out = find_max_intensity(i0_pv, roll_pv, linspace(-3.5, 3.5, 141))
+        out = find_max_intensity(i0_pv, roll_pv, linspace(-3.5, 3.5, 71))
         if get_dbinfo('request_abort', as_bool=True): return
         print '  Roll first pass %.3f at %.3f ' % (out)
         if out[0] > 0.002:
-            out = find_max_intensity(i0_pv, roll_pv, linspace(1.0, -1.0, 101))
+            out = find_max_intensity(i0_pv, roll_pv, linspace(1, -1, 51))
             if get_dbinfo('request_abort', as_bool=True): return
         #endif
-        print '  Best Roll %.3f at %.3f ' % (out)
-        sleep(0.5)
+        print 'Best Roll %.3f at %.3f ' % (out)
     #endif
 
+    sleep(0.5)
     # re-find best tilt value, now using I0
-    out = find_max_intensity(i0_pv, tilt_pv, linspace(-1, 1, 51))
+    out = find_max_intensity(i0_pv, tilt_pv, linspace(-1.5, 1.5, 101))
     if get_dbinfo('request_abort', as_bool=True): return
     print '  Final Best Pitch: %.3f at %.3f ' % (out)
-    sleep(1.0)
+    sleep(0.5)
     caput('13IDA:QE2:ComputePosOffsetX.PROC', 1, wait=True)
     caput('13IDA:QE2:ComputePosOffsetY.PROC', 1, wait=True)
     sleep(0.5)
     caput('13IDA:efast_pitch_pid.FBON', 0)
+    if enable_fb_pitch:
+        caput('13XRM:edb:use_fb', 1)
+        sleep(2.5)
+    #endif
     if enable_fb_roll:
         caput('13IDA:efast_roll_pid.FBON', 1)
     #endif
-    if enable_fb_pitch:
-        caput('13XRM:edb:use_fb', 1)
-    #endif
-    print 'Set Mono tilt done'
+    print 'Set Mono tilt done (%.2f seconds)' % (systime()-t0)
 #enddef

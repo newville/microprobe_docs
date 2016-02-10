@@ -4,7 +4,41 @@ Commands for X-ray Diffraction
 Note that an XRD camera must be installed!
 """
 
-def save_xrd(name, t=10, ext=None, prefix='13PEL1:', timeout=60.0):
+def setup_epics_shutter(prefix='13MARCCD4:'):
+    """
+    Setup Epics shutter for CCD camera
+       open /close pv = 13IDA:m70.VAL (SSA H WID)
+       open val =  0.080, close val = -0.020
+    """
+    caput(prefix+'cam1:ShutterOpenEPICS.OUT',   '13IDA:m70.VAL')
+    caput(prefix+'cam1:ShutterCloseEPICS.OUT',  '13IDA:m70.VAL')
+    caput(prefix+'cam1:ShutterOpenEPICS.OCAL',  '0.080')
+    caput(prefix+'cam1:ShutterCloseEPICS.OCAL', '-0.020')
+    caput(prefix+'cam1:ShutterOpenDelay',        1.50)
+    caput(prefix+'cam1:ShutterCloseDelay',       0.0)
+    caput(prefix+'cam1:ShutterMode',             1)
+#enddef
+
+def clear_epics_shutter(prefix='13MARCCD4:'):
+    """
+    Clear Epics shutter PV for CCD camera
+    """
+    caput(prefix+'cam1:ShutterOpenEPICS.OUT',   '')
+    caput(prefix+'cam1:ShutterCloseEPICS.OUT',  '')
+    caput(prefix+'cam1:ShutterOpenEPICS.OCAL',  '0')
+    caput(prefix+'cam1:ShutterCloseEPICS.OCAL', '0')
+    caput(prefix+'cam1:ShutterOpenDelay',        0.1)
+    caput(prefix+'cam1:ShutterCloseDelay',       0.1)
+    caput(prefix+'cam1:ShutterMode',             0)
+#enddef
+
+def close_ccd_shutter():
+    caput('13IDA:m70.VAL', -0.025, wait=True)
+    sleep(1.0)
+#enddef
+
+def save_xrd(name, t=10, ext=None, prefix='13MARCCD4:', timeout=60.0):
+##  prefix='13PEL1:' prefix='13MARCCD1:'
     """
     Save XRD image from XRD camera.
 
@@ -27,8 +61,11 @@ def save_xrd(name, t=10, ext=None, prefix='13PEL1:', timeout=60.0):
        `save_xrd_marccd`, `save_xrd_pe`
 
     """
-    # save_xrd_marccd(name, t=t, ext=ext, prefix=prefix)
-    save_xrd_pe(name, t=t, ext=ext, prefix=prefix)
+    if 'mar' in prefix.lower():
+        save_xrd_marccd(name, t=t, ext=ext, prefix=prefix)
+    else:
+        save_xrd_pe(name, t=t, ext=ext, prefix=prefix)
+    #endif
 #enddef
 
 
@@ -87,7 +124,7 @@ def save_xrd_pe(name, t=10, ext=None, prefix='13PEL1:', timeout=60.0):
             (clock()-t0 < timeout)):
         sleep(0.25)
     #endwhile
-    print('Done!')
+    print('Acquire Done!')
     sleep(0.1)
 
     # clean up, returning to short dwell time
@@ -100,7 +137,7 @@ def save_xrd_pe(name, t=10, ext=None, prefix='13PEL1:', timeout=60.0):
     caput(prefix+'cam1:Acquire', 1)
 #enddef
 
-def save_xrd_marccd(name, t=10, ext=None, prefix='13MARCCD1:', timeout=60.0):
+def save_xrd_marccd(name, t=10, ext=None, prefix='13MARCCD4:', timeout=60.0):
     """
     save XRD image from MARCCD (Rayonix 165) camera to file
 
@@ -120,19 +157,23 @@ def save_xrd_marccd(name, t=10, ext=None, prefix='13MARCCD1:', timeout=60.0):
         The marccd requires the Epics Shutter to be set up correctly.
 
     """
-    start_time = time()
+    start_time = systime()
 
     # save shutter mode, disable shutter for now
     shutter_mode = caget(prefix+'cam1:ShutterMode')
 
+
     # NOTE: Need to start acquisition with the shutter
     # having been closed for awhile
     # using the SSA H Width as shutter we want
+    # NOTE: Need to start acquisition with the shutter
+    # having been closed for awhile
+    # using the SSA H Width as shutter we want
+
     caput(prefix+'cam1:ShutterControl', 0)
-    sleep(5.0)
-    print 'Shutter really, really closed'
+    close_ccd_shutter()
+
     caput(prefix+'cam1:FrameType', 0)
-    caput(prefix+'cam1:ShutterMode', 1)
     caput(prefix+'cam1:ImageMode', 0)
     caput(prefix+'cam1:AutoSave',       1)
     caput(prefix+'cam1:AutoIncrement',  1)
@@ -147,20 +188,28 @@ def save_xrd_marccd(name, t=10, ext=None, prefix='13MARCCD1:', timeout=60.0):
     # expose
     caput(prefix+'cam1:Acquire', 1)
     sleep(1.0 + max(1.0, t))
-    t0 = clock()
+    t0 = systime()
     print('Wait for Acquire ... ')
     while ((1 == caget(prefix+'cam1:Acquire')) and
             (clock()-t0 < timeout)):
-        sleep(0.2533)
+        sleep(0.25)
     #endwhile
 
-    print('Acquire Done! %.3f sec' % (time()-start_time))
-    sleep(2.0)
+    fname = caget(prefix+'cam1:FullFileName_RBV', as_string=True)
+    print('Acquire Done! %.3f sec' % (systime()-start_time))
+    print('Wrote %s' % fname)
+    sleep(1.0)
     caput(prefix+'cam1:ShutterControl', 1)
 #enddef
 
 
-def xrd_bgr(prefix='13MARCCD1:', timeout=120.0):
+def xrd_at(posname,  t):
+    move_samplestage(posname, wait=True)
+    save_xrd(posname, t=t, ext=1)
+#enddef
+
+
+def xrd_bgr(prefix='13MARCCD4:', timeout=120.0):
     """
     collect XRD Background for marccd
 

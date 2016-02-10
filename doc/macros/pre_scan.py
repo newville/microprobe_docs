@@ -23,64 +23,80 @@ def pre_scan_command(scan=None):
          run after all the detector `pre_scan` commands.
 
     """
-    print 'This is pre_scan_command(), last updated 24-Sep-2015'
+    print 'Pre_scan_command() from 1-Dec-2015'
     sleep(1)
 
-    # Step 1: restart QE2
+    # Step 0: restart QE2
     caput('13IDA:QE2:Acquire', 0)
     sleep(0.5)
     caput('13IDA:QE2:Acquire', 1)
 
+    # Step 1: wait up to 12 hours for shutters to open
+    #  try opening shutters every 15 minutes
+    shutter_status = (caget('13IDA:eps_mbbi25'), caget('13IDA:eps_mbbi27'))
+    if shutter_status != (1, 1): 
+        print 'Waiting for shutters to open'
+        t0 = systime()
+	while shutter_status != (1, 1) and (systime()-t0 < 12*3600.0):
+            shutter_status = (caget('13IDA:eps_mbbi25'), caget('13IDA:eps_mbbi27'))
+            sleep(3)
+            if int(systime()) % 900 < 10:
+                caput('13IDA:OpenFEShutter.PROC', 1)
+                caput('13IDA:OpenEShutter.PROC',  1)
+                sleep(10)
+            #endif
+            if check_scan_abort():  return
+        #endwhile			
+    #endif
+
+    # Step 3: if flux is low, wait, tweak energy
     i0_flux = float(caget('13XRM:ION:FluxOut'))
     i0_llim = float(caget('13XRM:ION:FluxLowLimit'))
-
-    # Step 2: if flux is low, wait, tweak energy
     if (i0_flux < i0_llim):
+        print(" I0 flux looks low....")
         t0 = systime()
         energy_tweaked = False
         energy = caget('13IDE:En:Energy')
-        while i0_flux < i0_llim and (systime()-t0) < 30.0:
-            sleep(0.250)
+        while i0_flux < i0_llim and (systime()-t0) < 600.0:
+            sleep(1)
             i0_flux = float(caget('13XRM:ION:FluxOut'))
             i0_llim = float(caget('13XRM:ION:FluxLowLimit'))
-            # may need to tweak the energy (ID may be wrong)
-            if (systime() - t0) > 15.0 and not energy_tweaked:
-                energy_tweaked = True
+            if int(systime()) % 30 < 3:
                 caput('13IDE:En:Energy', energy + 0.1)
+                time.sleep(3)
             #endif
             if check_scan_abort():  return
         #endwhile
     #endif
 
-    # Step 3: if flux is still low, set mono tilt
+    # Step 4: if flux is still low, set mono tilt
     if (i0_flux < i0_llim):
         print("I0 Flux = %.4g too low, setting mono tilt" % i0_flux)
         set_mono_tilt()
         if check_scan_abort():  return
     #endif
 
-    # Step 4: longer wait, as if beam dumped
-    WAIT_TIME = 4*3600.0
-
+    # Step 5: if flux is still too low, wait another hour, 
+    # hoping for operator intervention
     i0_flux = float(caget('13XRM:ION:FluxOut'))
     i0_llim = float(caget('13XRM:ION:FluxLowLimit'))
-    t0 = t0en = systime()
     energy = caget('13IDE:En:Energy')
     en_off = 0
+    t0 = systime()
 
     if (i0_flux < i0_llim):
-        print(" I0 flux too low, waiting (hit Abort to cancel)")
+        print(" I0 flux too low, waiting for 1 hour (do something or hit Abort to cancel)")
     #endif
-    while i0_flux < i0_llim and systime()-t0 < WAIT_TIME:
-        sleep(1.0)
+    while i0_flux < i0_llim and systime()-t0 < 3600.0:
         i0_flux = float(caget('13XRM:ION:FluxOut'))
         i0_llim = float(caget('13XRM:ION:FluxLowLimit'))
+        sleep(1.0)
         # may need to tweak the energy (ID may be wrong)
-        if (systime() - t0en) > 120.0:
-            t0en = systime()
+        if systime() % 120.0 < 5:
             en_off  += 0.1
-            if en_off > 1.02: en_off = -1.0
+            if en_off > 2.02: en_off = -2.0
             caput('13IDE:En:Energy', energy + en_off)
+            sleep(5)
         #endif
         if check_scan_abort():  return
     #endwhile

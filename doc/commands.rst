@@ -152,6 +152,6 @@ Moving Other Beamline Instruments
 The Pre-Scan Command
 =======================================
 
-.. automodule:: pre_scan_command
+.. automodule:: pre_scan
 
 .. autofunction:: pre_scan_command

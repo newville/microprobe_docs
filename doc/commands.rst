@@ -11,14 +11,30 @@ executed one at a time from the command line, or run in a script.
 
 
 
+Restarting the Scan Server
+=======================================
+
+Two commands are available for restarting the Scan Server process are
+reloading all macro definition.
+
+.. module:: common
+   :synopsis: common commands
+
+.. autofunction:: server_restart
+
+.. function:: load_macros()
+  
+   Reloads all Macro definitions.   This is necessary if you change a macro.
+   Note that closing and reopening the `Macro Window` will do this.
+
+
 Moving the Sample Stage
 =======================================
 
-Several commands allow you to move the sample to a desired location<.
+Several commands allow you to move the sample to a desired location.
 
 .. module:: samplestage
    :synopsis: commands for moving the sample
-
 
 .. autofunction:: move_samplestage
 
@@ -30,6 +46,9 @@ Getting Positions from OSCAR to the Sample Stage
 These commands help move coordinates saved with OSCAR (the off-line
 microscope) to the Samplestage.
 
+
+Transferring coordinates from OSCAR to the Sample Stage
+================================================================
 
 .. module:: uscope
 
@@ -67,22 +86,6 @@ Since these can change for each experiment, please consult Matt or Tony
 before using them!
 
 .. autofunction::  move_to_s
-.. autofunction::  move_to_ti
-.. autofunction::  move_to_v
-.. autofunction::  move_to_cr
-.. autofunction::  move_to_mn
-.. autofunction::  move_to_eu
-.. autofunction::  move_to_fe
-.. autofunction::  move_to_ni
-.. autofunction::  move_to_cu
-.. autofunction::  move_to_zn
-.. autofunction::  move_to_w
-.. autofunction::  move_to_as
-.. autofunction::  move_to_sr
-.. autofunction::  move_to_zr
-.. autofunction::  move_to_mo
-
-
 .. autofunction::  move_to_map
 
 .. autofunction::  move_to_xrd
@@ -152,6 +155,6 @@ Moving Other Beamline Instruments
 The Pre-Scan Command
 =======================================
 
-.. automodule:: pre_scan
+.. module:: pre_scan
 
 .. autofunction:: pre_scan_command

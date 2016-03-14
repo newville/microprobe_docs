@@ -18,6 +18,7 @@ sys.path.insert(0, 'macros')
 
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.mathjax',
+              'sphinx.ext.ifconfig',
               'sphinx.ext.linkcode',
               'sphinxcontrib.napoleon',
               'sphinxcontrib.argdoc',
@@ -58,11 +59,13 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
+html_theme_path = ['sphinx/theme']
 html_theme = 'default'
+# html_theme = 'sphinxdoc'
 
-html_theme = 'sphinxdoc'
-
-# html_theme = 'nature'
+html_theme = 'nature'
+html_theme = 'sphinx_rtd_theme'
+# html_theme = 'alabaster'
 # html_theme = 'agogo'
 # html_theme_options = {'pagewidth':'85em', 'documentwidth':'60em', 'sidebarwidth': '25em',
 #                       # 'headercolor1': '#000080',
@@ -75,10 +78,10 @@ html_theme = 'sphinxdoc'
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
 #html_title = None
-html_title = 'Step Scanning and Data Acquisition with Python and Epics Channel Access'
+html_title = 'The GSECARS X-ray Microprobe Beamline, APS 13-ID-E'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-html_short_title = 'StepScan with PyEpics'
+html_short_title = 'GSECARS X-ray Microprobe'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
@@ -130,37 +133,6 @@ html_show_sourcelink = True
 #html_file_suffix = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'stepscan'
+htmlhelp_basename = 'GSEXRM'
 
 
-# -- Options for LaTeX output --------------------------------------------------
-
-# The paper size ('letter' or 'a4').
-#latex_paper_size = 'letter'
-
-# The font size ('10pt', '11pt' or '12pt').
-#latex_font_size = '10pt'
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title, author, documentclass [howto/manual]).
-latex_documents = [
-    ('index', 'stepscan.tex', u'Step Scanning and Data Acquisition with Python and Epics Channel Access',
-     u'Matthew Newville', 'manual'),
-    ]
-
-# The name of an image file (relative to this directory) to place at the top of
-# the title page.
-#latex_logo = None
-
-# For "manual" documents, if this is true, then toplevel headings are parts,
-# not chapters.
-#latex_use_parts = False
-
-# Additional stuff for the LaTeX preamble.
-#latex_preamble = ''
-
-# Documents to append as an appendix to all manuals.
-#latex_appendices = []
-
-# If false, no module index is generated.
-#latex_use_modindex = True

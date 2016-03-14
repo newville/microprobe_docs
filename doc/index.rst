@@ -13,6 +13,7 @@ operating the X-ray Microprobe.
    :maxdepth: 2
 
    beamline
+   overview
    starting
    xrfmaps
    xas

@@ -37,7 +37,12 @@ def close_ccd_shutter():
     sleep(1.0)
 #enddef
 
-def save_xrd(name, t=10, ext=None, prefix='13MARCCD4:', timeout=60.0):
+def open_ccd_shutter():
+    caput('13IDA:m70.VAL', 0.080, wait=True)
+    sleep(1.0)
+#enddef
+
+def save_xrd(name, t=10, ext=None, prefix='13PEL1:', timeout=60.0):
 ##  prefix='13PEL1:' prefix='13MARCCD1:'
     """
     Save XRD image from XRD camera.
@@ -109,7 +114,7 @@ def save_xrd_pe(name, t=10, ext=None, prefix='13PEL1:', timeout=60.0):
     caput(prefix+'TIFF1:EnableCallbacks', 1)
     caput(prefix+'cam1:ImageMode',        3)
 
-    sleep(0.1)
+    sleep(0.5)
     acq_time =caget(prefix+'cam1:AcquireTime')
 
     numimages = int(t*1.0/acq_time)
@@ -119,22 +124,27 @@ def save_xrd_pe(name, t=10, ext=None, prefix='13PEL1:', timeout=60.0):
     caput(prefix+'cam1:Acquire', 1)
     sleep(0.5 + max(0.5, 0.5*t))
     t0 = clock()
-    print('Wait for Acquire ... ')
+    nrequested = caget(prefix+'cam1:NumImages')
+    print('Wait for Acquire ... %i' % nrequested)
+
     while ((1 == caget(prefix+'cam1:Acquire')) and
             (clock()-t0 < timeout)):
         sleep(0.25)
+
     #endwhile
-    print('Acquire Done!')
+    print('Acquire Done, writing file %s' % name)
     sleep(0.1)
 
     # clean up, returning to short dwell time
     caput(prefix+'TIFF1:WriteFile',       1)
     caput(prefix+'TIFF1:EnableCallbacks', 0)
     sleep(0.5)
+
     caput(prefix+'cam1:ImageMode', 2)
     caput(prefix+'cam1:ShutterMode', shutter_mode)
     sleep(0.5)
     caput(prefix+'cam1:Acquire', 1)
+    sleep(1.5)
 #enddef
 
 def save_xrd_marccd(name, t=10, ext=None, prefix='13MARCCD4:', timeout=60.0):
@@ -209,7 +219,7 @@ def xrd_at(posname,  t):
 #enddef
 
 
-def xrd_bgr(prefix='13MARCCD4:', timeout=120.0):
+def xrd_bgr_marccd(prefix='13MARCCD4:', timeout=120.0):
     """
     collect XRD Background for marccd
 
@@ -230,5 +240,29 @@ def xrd_bgr(prefix='13MARCCD4:', timeout=120.0):
             (clock()-t0 < timeout)):
         sleep(0.25)
     #endwhile
+    sleep(2.0)
+#enddef
+
+
+def xrd_bgr(prefix='13PEL1:'):
+    """
+    collect XRD Background for Perkin Elmer
+
+    Parameters:
+        prefix (string): PV prefix for camera ['13MARCCD1:']
+    
+    """
+
+    caput(prefix+'cam1:ShutterMode', 1)
+    immode = caget(prefix+'cam1:ImageMode')
+    caput(prefix+'cam1:ImageMode', 1)
+    caput(prefix+'cam1:ShutterControl', 0)
+    sleep(3)
+    caput(prefix+'cam1:PEAcquireOffset', 1)
+    sleep(5)
+
+    caput(prefix+'cam1:ShutterControl', 1)
+    caput(prefix+'cam1:ImageMode', immode)
+    caput(prefix+'cam1:Acquire', 1)
     sleep(2.0)
 #enddef

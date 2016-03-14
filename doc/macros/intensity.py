@@ -307,15 +307,15 @@ def find_max_intensity(readpv, drivepv, vals, minval=0.1):
     return i0max, _best
 #enddef
 
-def set_mono_tilt(enable_fb_roll=True, enable_fb_pitch=False):
+def set_mono_tilt(enable_fb_roll=True, enable_fb_pitch=None):
     """
     Adjust IDE monochromator 2nd crystal tilt and roll to maximize intensity.
 
     Parameters:
         enable_fb_roll (True or False): enable roll feedback after
                best position is found. [True]
-        enable_fb_pitch (True or False): enable pitch feedback after
-               best position is found. [False]
+        enable_fb_pitch (True or False or None): enable pitch feedback after
+               best position is found. [None]
 
     Note:
         This works by
@@ -379,6 +379,9 @@ def set_mono_tilt(enable_fb_roll=True, enable_fb_pitch=False):
         caput('13XRM:edb:use_fb', 1)
         sleep(2.5)
     #endif
+	if enable_fb_roll is None:
+	    enable_fb_roll = caget('13IDE:En:Energy') < 3000.0
+	#endif
     if enable_fb_roll:
         caput('13IDA:efast_roll_pid.FBON', 1)
     #endif

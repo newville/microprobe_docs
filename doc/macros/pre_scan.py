@@ -23,23 +23,34 @@ def pre_scan_command(scan=None):
          run after all the detector `pre_scan` commands.
 
     """
-    print 'Pre_scan_command() from 1-Dec-2015'
-    sleep(1)
+    print 'Pre_scan_command() from 1-March-2016'
+    sleep(0.1)
 
     # Step 0: restart QE2
     caput('13IDA:QE2:Acquire', 0)
-    sleep(0.5)
+    sleep(0.25)
     caput('13IDA:QE2:Acquire', 1)
-
+    
+    try:
+      fluxlow = float(caget('13XRM:ION:FluxLowLimit'))
+    except:
+      fluxlow = 1.e7
+    #endtry
+    if fluxlow < 200: 
+        print("not waiting for shutter")
+        return
+    #endif
+     
     # Step 1: wait up to 12 hours for shutters to open
     #  try opening shutters every 15 minutes
     shutter_status = (caget('13IDA:eps_mbbi25'), caget('13IDA:eps_mbbi27'))
+    # print  "Shutter: ", shutter_status
     if shutter_status != (1, 1): 
         print 'Waiting for shutters to open'
         t0 = systime()
-	while shutter_status != (1, 1) and (systime()-t0 < 12*3600.0):
+        while shutter_status != (1, 1) and (systime()-t0 < 12*3600.0):
             shutter_status = (caget('13IDA:eps_mbbi25'), caget('13IDA:eps_mbbi27'))
-            sleep(3)
+            sleep(1.0)
             if int(systime()) % 900 < 10:
                 caput('13IDA:OpenFEShutter.PROC', 1)
                 caput('13IDA:OpenEShutter.PROC',  1)
@@ -53,7 +64,7 @@ def pre_scan_command(scan=None):
     i0_flux = float(caget('13XRM:ION:FluxOut'))
     i0_llim = float(caget('13XRM:ION:FluxLowLimit'))
     if (i0_flux < i0_llim):
-        print(" I0 flux looks low....")
+        print(" Waiting for I0 flux.")
         t0 = systime()
         energy_tweaked = False
         energy = caget('13IDE:En:Energy')
@@ -61,9 +72,9 @@ def pre_scan_command(scan=None):
             sleep(1)
             i0_flux = float(caget('13XRM:ION:FluxOut'))
             i0_llim = float(caget('13XRM:ION:FluxLowLimit'))
-            if int(systime()) % 30 < 3:
+            if int(systime()) % 30 < 5:
                 caput('13IDE:En:Energy', energy + 0.1)
-                time.sleep(3)
+                sleep(5)
             #endif
             if check_scan_abort():  return
         #endwhile
@@ -100,5 +111,7 @@ def pre_scan_command(scan=None):
         #endif
         if check_scan_abort():  return
     #endwhile
+    
+    #print 'Done with pre-scan!'
     return None
 #enddef

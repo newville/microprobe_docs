@@ -26,13 +26,14 @@ extensions = ['sphinx.ext.autodoc',
 
 extensions.extend(['fix_equation_ref', 'subfig', 'numfig', 'numsec'])
 
-
 def linkcode_resolve(domain, info):
     if domain != 'py':
         return None
     mname = info.get('module', '')
-    fname = info.get('fullname', '')
-    return 'file:///T:/xas_user/scan_config/13ide/macros/%s.lar' % mname
+    if mname in (None, '', 'None'):
+        return None
+    link = 'file:///T:/xas_user/scan_config/13ide/macros'
+    return '%s/%s.lar' % (link, mname)
 
 
 templates_path = ['_templates']
@@ -134,5 +135,3 @@ html_show_sourcelink = True
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'GSEXRM'
-
-

@@ -1,4 +1,4 @@
-def server_restart():
+def restart_server():
    """
    shutdown, restart scan server.
    WARNING : only do this if you are sure of what you're doing!
@@ -67,3 +67,5 @@ def focus10():
    """
    move_instrument('Small KB Forces', 'focus_10um', wait=True)
 #enddef
+
+

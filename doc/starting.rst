@@ -10,7 +10,7 @@ environment at the start of your beamtime.  We may also have to cahnge some
 beamline properties, sucha as energy range or focus.  These tasks normally
 do not take very long.  If you have samples that you want to view under a
 microscope to select areas for analysis, this is a fine opportunity to use
-the :ref:`Offline Microscope (OSCAR) <oscar-chapter>`.
+the :ref:`Using the SampleStage Control and Off-line Microscope <oscar-chapter>`.
 
 
 .. index:: Working Folder

@@ -20,4 +20,5 @@ operating the X-ray Microprobe.
    xrd
    scripting
    oscar
+   cheatsheet
    commands

@@ -20,10 +20,10 @@ reloading all macro definition.
 .. module:: common
    :synopsis: common commands
 
-.. autofunction:: server_restart
+.. autofunction:: restart_server
 
 .. function:: load_macros()
-  
+
    Reloads all Macro definitions.   This is necessary if you change a macro.
    Note that closing and reopening the `Macro Window` will do this.
 

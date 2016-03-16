@@ -2,7 +2,7 @@ import sys
 import os
 import shutil
 
-src  = '/cars5/Data/xas_user/scan_config/13ide/macros'
+src  = '//cars5/Data/xas_user/scan_config/13ide/macros'
 dest = 'doc/macros'
 
 for fname in os.listdir(src):

@@ -23,29 +23,29 @@ def pre_scan_command(scan=None):
          run after all the detector `pre_scan` commands.
 
     """
-    print 'Pre_scan_command() from 1-March-2016'
+    print 'Pre_scan_command() from 21-March-2016'
     sleep(0.1)
 
     # Step 0: restart QE2
     caput('13IDA:QE2:Acquire', 0)
     sleep(0.25)
     caput('13IDA:QE2:Acquire', 1)
-    
+
     try:
       fluxlow = float(caget('13XRM:ION:FluxLowLimit'))
     except:
       fluxlow = 1.e7
     #endtry
-    if fluxlow < 200: 
+    if fluxlow < 200:
         print("not waiting for shutter")
         return
     #endif
-     
+
     # Step 1: wait up to 12 hours for shutters to open
     #  try opening shutters every 15 minutes
     shutter_status = (caget('13IDA:eps_mbbi25'), caget('13IDA:eps_mbbi27'))
     # print  "Shutter: ", shutter_status
-    if shutter_status != (1, 1): 
+    if shutter_status != (1, 1):
         print 'Waiting for shutters to open'
         t0 = systime()
         while shutter_status != (1, 1) and (systime()-t0 < 12*3600.0):
@@ -57,7 +57,7 @@ def pre_scan_command(scan=None):
                 sleep(10)
             #endif
             if check_scan_abort():  return
-        #endwhile			
+        #endwhile
     #endif
 
     # Step 3: if flux is low, wait, tweak energy
@@ -87,7 +87,7 @@ def pre_scan_command(scan=None):
         if check_scan_abort():  return
     #endif
 
-    # Step 5: if flux is still too low, wait another hour, 
+    # Step 5: if flux is still too low, wait another hour,
     # hoping for operator intervention
     i0_flux = float(caget('13XRM:ION:FluxOut'))
     i0_llim = float(caget('13XRM:ION:FluxLowLimit'))
@@ -111,7 +111,7 @@ def pre_scan_command(scan=None):
         #endif
         if check_scan_abort():  return
     #endwhile
-    
+
     #print 'Done with pre-scan!'
     return None
 #enddef

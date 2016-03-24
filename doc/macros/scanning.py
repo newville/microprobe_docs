@@ -54,9 +54,10 @@ def pos_map(posname, scanname):
     do_slewscan(scanname, filename=datafile)
 #enddef
 
-def scan_at_energy(scanname, samplename, energy):
+def scan_at_energy(scanname, posname, energy):
     move_energy(energy)
-    fname = '%s_%s_%ieV.001' % (samplename, scanname, energy)
+    move_samplestage(posname, wait=True)
+    fname = '%s_%s_%ieV.001' % (posname, scanname, energy)
     do_scan(scanname, filename=fname)
 #enddef
 

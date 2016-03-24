@@ -1,4 +1,6 @@
-"""
+#
+
+doc = """
 Code to support Off-line Microscope and transfer of coordinates to Sample Stage
 
 main functions:
@@ -20,49 +22,66 @@ make_uscope_rotation()
    Positions names not found in both instruments are ignored.
 """
 
-import json
+import json, os
 from collections import OrderedDict
 
-# if not hasattr(_scan, '_instdb'):
-#     connect_scandb(dbname='epics_scan',
-#                 server='postgresql',
-#                 host='ion.cars.aps.anl.gov',
-#                 user='epics',
-#                 password='microXAFS@13IDE')
-# #endif
+## from scan_credentials import conn
+## if not hasattr(_scan, '_instdb'):
+##     connect_scandb(**conn)
+##  #endif
 
-def read_uscope_xyz(name='IDE_Microscope'):
+def read_position(name='IDE_Microscope'):
     """
-    read XYZ Positions from IDE Microscope Instrument
-    returns dictionary of PositionName: (x, y, z)
+    read XYZ Positions from Positions file or instrument
+    returns ordered dictionary of PositionName: values
     """
     out = OrderedDict()
-    instdb = _scan._instdb
-    scandb = _scan._scandb
-    for pname in instdb.get_positionlist(name):
-        v =  instdb.get_position_vals(name, pname)
-        out[pname]  = [v['13IDE:m1.VAL'],
-                       v['13IDE:m2.VAL'],
-                       v['13IDE:m3.VAL']]
-    #endfor
-
+    if os.path.exists(name):
+        fh = open(name, 'r')
+        lines = fh.readlines()
+        fh.close()
+        for line in lines:
+            if line.startswith('#') or  len(line)<3: continue
+            row = json.loads(line[:-1])
+            name = row[0]
+            out[row[0]] = dict([(a, float(b)) for a, b in row[1]])
+        #endfor
+    else:
+        instdb = _scan._instdb
+        for pname in instdb.get_positionlist(name):
+            out[pname] = instdb.get_position_vals(name, pname)
+        #endfor
+    #endif
     return out
 #enddef
 
-def read_sample_xyz(name='IDE_SampleStage'):
+def read_xyz_uscope(name='IDE_Microscope'):
     """
-    read XYZ Positions from IDE SampleStage Instrument
+    read XYZ Positions from Positions file or
+    current IDE Microscope Instrument in scan database
     returns dictionary of PositionName: (x, y, z)
-
-    Note: FineX, FineY and Theta stages are not included
     """
-    out = OrderedDict()
-    instdb = _scan._instdb
-    for pname in instdb.get_positionlist(name):
-        v = instdb.get_position_vals(name, pname)
-        out[pname]  = [v['13XRM:m4.VAL'],
-                       v['13XRM:m6.VAL'],
-                       v['13XRM:m5.VAL']]
+    out = read_position(name=name)
+    for key, val in out.items():
+        out[key] = [val['13IDE:m1.VAL'],
+                    val['13IDE:m2.VAL'],
+                    val['13IDE:m3.VAL']]
+    #endfor
+    return out
+#enddef
+
+
+def read_xyz_sample(name='IDE_SampleStage'):
+    """
+    read XYZ Positions from Positions file or
+    current IDE SampleStage Instrument in scan database
+    returns dictionary of PositionName: (x, y, z)
+    """
+    out = read_position(name=name)
+    for key, val in out.items():
+        out[key] = [val['13XRM:m4.VAL'],
+                    val['13XRM:m6.VAL'],
+                    val['13XRM:m5.VAL']]
     #endfor
     return out
 #enddef
@@ -132,8 +151,6 @@ def calc_rotmatrix(d1, d2):
 
     fit_result = minimize(resid_rotmatrix, params, args=(mat, v1, v2))
     mat = params2rotmatrix(params, mat)
-    print(" Calculated Rotation Matrix:")
-    print(mat)
     return mat, v1, v2
 #enddef
 
@@ -142,7 +159,7 @@ def calc_rotmatrix(d1, d2):
 ## Main Interface
 ##
 
-def make_uscope_rotation():
+def make_uscope_rotation(samplename='IDE_SampleStage', uscopename='IDE_Microscope'):
     """
     Calculate and store the rotation maxtrix needed to convert
     positions from the GSECARS IDE offline microscope (OSCAR)
@@ -150,6 +167,12 @@ def make_uscope_rotation():
 
     This calculates the rotation matrix based on all position
     names that occur in the Position List for both instruments.
+
+    Parameters:
+        samplename (string): name of Instrument or Positions File for
+                            SampleStage positions
+        uscopename (string): name of Instrument or Positions File for
+                             Offline Microscope positions
 
     Note:
         The result is saved as a json dictionary of the
@@ -159,9 +182,11 @@ def make_uscope_rotation():
         Please consult with Matt or Tony before running this!
     """
 
-    d1 = read_uscope_xyz()
-    d2 = read_sample_xyz()
+    d1 = read_xyz_uscope(name=uscopename)
+    d2 = read_xyz_sample(name=samplename)
+
     # calculate the rotation matrix
+
     mat, v1, v2 = calc_rotmatrix(d1, d2)
     if mat is None:
         return
@@ -200,7 +225,7 @@ def uscope2sample(suffix='', xoffset=0, yoffset=0, zoffset=0):
 
     Note:
         Saved position names may be overwritten.
-        
+
         Non-zero values for xoffset, yoffset, zoffset can accomodate for
         offsets for IDE SampleStage, due to changes in mirror pitch.
 
@@ -214,7 +239,7 @@ def uscope2sample(suffix='', xoffset=0, yoffset=0, zoffset=0):
         print("Error: could not get rotation matrix!")
         return
     #endtry
-    upos   = read_uscope_xyz()
+    upos   = read_xyz_uscope()
     labels = upos.keys()
 
     v = ones((4, len(labels)))
@@ -245,4 +270,3 @@ def uscope2sample(suffix='', xoffset=0, yoffset=0, zoffset=0):
         _scan._instdb.save_position('IDE_SampleStage', nlabel, spos)
     #endfor
 #enddef
-

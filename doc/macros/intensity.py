@@ -6,15 +6,15 @@ def feedback_off():
     """
     Turn intensity feedback off
     """
-    caput('13IDA:efast_pitch_pid.FBON', 0) 
+    caput('13IDA:efast_pitch_pid.FBON', 0)
     caput('13XRM:edb:use_fb', 0)
     caput('13IDA:efast_roll_pid.FBON', 0)
 #enddef
 
 def feedback_on(roll=True, pitch=True):
     """
-    Turn intensity feedback on or off 
-    
+    Turn intensity feedback on or off
+
     roll = True / False for roll feedback
     pitch = True / False for pitch feedback
     """
@@ -23,7 +23,7 @@ def feedback_on(roll=True, pitch=True):
     caput('13IDA:efast_roll_pid.FBON', 0)
     if pitch: caput('13XRM:edb:use_fb', 1)
     if roll:  caput('13IDA:efast_roll_pid.FBON', 0)
-    
+
 #enddef
 
 def optimize_id():
@@ -36,7 +36,7 @@ def optimize_id():
     """
     caput('13IDE:En:id_track', 0)
     und_energy  = caget('ID13us:ScanEnergy')
-    mono_energy = caget('13IDE:En:Energy') 
+    mono_energy = caget('13IDE:En:Energy')
     energies = linspace(-75, 75, 31) + mono_energy
     caput('13IDE:En:Energy', energies[0])
     sleep(2.0)
@@ -54,10 +54,10 @@ def optimize_id():
        #endif
     #endfor
     caput('13IDE:En:id_track', 1)
-    offset = und_energy - best_en*0.001 
+    offset = und_energy - best_en*0.001
     print 'best ID offset = %.3f keV ' % offset
     caput('13IDE:En:id_off', offset)
-    caput('13IDE:En:Energy', best_en) 
+    caput('13IDE:En:Energy', best_en)
 #enddef
 
 
@@ -294,7 +294,7 @@ def find_max_intensity(readpv, drivepv, vals, minval=0.1):
     i0max = caget(readpv)
     for val in _orig+vals:
         caput(drivepv, val)
-        sleep(0.08)
+        sleep(0.100)
         i0 = caget(readpv)
         if i0 > i0max:
             i0max, _best = i0, val
@@ -324,13 +324,18 @@ def set_mono_tilt(enable_fb_roll=True, enable_fb_pitch=None):
             3. adjusting pitch to maximize intensity at I0 Ion Chamber
 
     """
-    print 'Set Mono Tilt 6-Nov-2015'
+    print 'Set Mono Tilt 23-Mar-2016'
     with_roll = True
     t0 = systime()
     tilt_pv = '13IDA:DAC1_7.VAL'
     roll_pv = '13IDA:DAC1_8.VAL'
     i0_pv   = '13IDE:IP330_1.VAL'
     sum_pv  = '13IDA:QE2:SumAll:MeanValue_RBV'
+
+
+    if enable_fb_pitch is None:
+        enable_fb_pitch = caget('13IDE:En:Energy') < 3000.0
+    #endif
 
     caput('13XRM:edb:use_fb', 0)
     caput('13IDA:efast_pitch_pid.FBON', 0)
@@ -344,12 +349,12 @@ def set_mono_tilt(enable_fb_roll=True, enable_fb_pitch=None):
     caput('13IDA:QE2:ReadData.PROC', 1)
 
     # find best tilt value with BPM sum
-    out = find_max_intensity(sum_pv, tilt_pv, linspace(-2.5, 2.5, 101))
+    out = find_max_intensity(sum_pv, tilt_pv, linspace(-2.5, 2.5, 51))
     if get_dbinfo('request_abort', as_bool=True): return
-    # print '  Best Pitch (BPM): %.3f at %.3f ' % (out)
+    print '  Best Pitch (BPM): %.3f at %.3f ' % (out)
 
     # find best tilt value with IO
-    out = find_max_intensity(i0_pv, tilt_pv, linspace(-1, 1, 51))
+    out = find_max_intensity(i0_pv, tilt_pv, linspace(-1.0, 1.0, 51))
     if get_dbinfo('request_abort', as_bool=True): return
     print '  Best Pitch (I0): %.3f at %.3f ' % (out)
 
@@ -362,7 +367,7 @@ def set_mono_tilt(enable_fb_roll=True, enable_fb_pitch=None):
             out = find_max_intensity(i0_pv, roll_pv, linspace(1, -1, 51))
             if get_dbinfo('request_abort', as_bool=True): return
         #endif
-        print 'Best Roll %.3f at %.3f ' % (out)
+        print '  Best Roll %.3f at %.3f ' % (out)
     #endif
 
     sleep(0.5)
@@ -379,9 +384,9 @@ def set_mono_tilt(enable_fb_roll=True, enable_fb_pitch=None):
         caput('13XRM:edb:use_fb', 1)
         sleep(2.5)
     #endif
-	if enable_fb_roll is None:
-	    enable_fb_roll = caget('13IDE:En:Energy') < 3000.0
-	#endif
+        if enable_fb_roll is None:
+            enable_fb_roll = caget('13IDE:En:Energy') < 3000.0
+        #endif
     if enable_fb_roll:
         caput('13IDA:efast_roll_pid.FBON', 1)
     #endif

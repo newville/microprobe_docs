@@ -74,6 +74,7 @@ def move_instrument(inst_name, position_name, wait=False,
             #endwhile
         #endif
     #endif
+    sleep(1)
 #enddef
 
 def smallkb_stripes(stripe_name):
@@ -100,6 +101,18 @@ def smallkb_stripes(stripe_name):
     #endif
 #enddef
 
+def mirrors_5mrad(stripe='si'):
+    move_instrument('Small KB Forces', '5mrad', wait=True)
+    smallkb_stripes(stripe)
+    move_instrument('Sample Microscope', '5mrad', wait=True)
+#enddef
+
+def mirrors_4mrad(stripe='rh'):
+    move_instrument('Small KB Forces', '4mrad', wait=True)
+    smallkb_stripes(stripe)
+    move_instrument('Sample Microscope', '4mrad', wait=True)
+#enddef
+
 def focus_2um():
     """move small KB mirrors to 2 microns
     """
@@ -111,4 +124,3 @@ def focus_50um():
     """
     move_instrument('Small KB Forces', 'focus_50um', wait=True)
 #enddef
-

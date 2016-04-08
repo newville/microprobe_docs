@@ -2,6 +2,7 @@
 Commands for moving the monochromator energy and related tasks.
 """
 from intensity import set_mono_tilt, autoset_i0amp_gain
+from instruments import (move_instrument, smallkb_stripes,  mirrors_5mrad, mirrors_4mrad)
 
 def move_energy(energy, id_offset=None, id_harmonic=None, wait=True):
     """
@@ -234,23 +235,14 @@ def move_to_edge(element, edge='K', id_harmonic=None, id_offset=None,
     #endif
 #enddef
 
-# def move_to_map_10500():
-#     "move to 10500 eV"
-#     caput('13IDA:DAC1_7.VAL', 4.7)
-#     caput('13IDA:DAC1_8.VAL', 3.6)
-#     move_to_edge('Ga', 'K', id_offset=0.119, id_harmonic=3, with_tilt=False)
-#     move_energy(10500.0, id_offset=0.119)
-#     set_i0amp_gain(2, 'nA/V')
-#     set_mono_tilt()
-# #enddef
-#
-# def move_to_18kev():
-#     "move to 18.0 keV "
-#     move_to_edge('Zr', id_offset=0.210, id_harmonic=3, with_tilt=False)
-#     set_i0amp_gain(2, 'nA/V')
-#     move_energy(18000.0, id_offset=0.210)
-#     set_mono_tilt()
-# #enddef
+
+def move_to_18kev():
+     "move to 18.0 keV "
+     move_to_edge('Zr', id_offset=0.210, id_harmonic=3, with_tilt=False)
+     set_i0amp_gain(2, 'nA/V')
+     move_energy(18000.0, id_offset=0.210)
+     set_mono_tilt()
+#enddef
 #
 # def move_to_14kev():
 #     "move to 14.0 keV "
@@ -326,11 +318,7 @@ def move_to_edge(element, edge='K', id_harmonic=None, id_offset=None,
 #     move_to_edge('Eu', edge='L3')
 # #enddef
 #
-def move_to_fe():
-    "move to Fe K Edge"
-    set_i0amp_gain(10,  'nA/V')
-    move_to_edge('Fe', id_offset=0.070)
-#enddef
+
 
 #
 # def move_to_cl():
@@ -412,75 +400,79 @@ def move_to_fe():
 #
 #
 #
+#
+# def move_to_as():
+#     "move to As K edge"
+#     set_i0amp_gain(5, 'nA/V')
+#     move_to_edge('As', id_offset=0.117)
+# #enddef
+#
+# def move_to_cs():
+#     "move to Cs L3 edge"
+#     set_i0amp_gain(20, 'nA/V')
+#     move_to_edge('Cs', 'L3', with_tilt=False)
+#     set_mono_tilt(enable_fb_roll=False)
+# #enddef
+#
+# def move_to_re():
+#     "move to Re L3 edge"
+#     set_i0amp_gain(5, 'nA/V')
+#     move_to_edge('Re', 'L3')
+# #enddef#
+#
+# def move_to_cu():
+#      "move to Cu K Edge"
+#      set_i0amp_gain(5, 'nA/V')
+#      move_to_edge('Cu', id_offset=0.090, id_harmonic=1)
+# #enddef
+#
+# def move_to_ni():
+#      "move to Ni K Edge"
+#      set_i0amp_gain(5, 'nA/V')
+#      move_to_edge('Ni','K')
+# #enddef
+#
+# def move_to_zn():
+#     "move to Zn K Edge"
+#     set_i0amp_gain(5, 'nA/V')
+#     move_to_edge('Zn', id_offset=0.098, id_harmonic=1)
+# #enddef
+#
+#
 
-def move_to_as():
-    "move to As K edge"
-    set_i0amp_gain(5, 'nA/V')
-    move_to_edge('As', id_offset=0.117)
-#enddef
-
-def move_to_cs():
-    "move to Cs L3 edge"
-    set_i0amp_gain(20, 'nA/V')
-    move_to_edge('Cs', 'L3', with_tilt=False)
-    set_mono_tilt(enable_fb_roll=False)
-#enddef
-
-def move_to_re():
-    "move to Re L3 edge"
-    set_i0amp_gain(5, 'nA/V')
-    move_to_edge('Re', 'L3')
-#enddef#
-
-def move_to_cu():
-     "move to Cu K Edge"
-     set_i0amp_gain(5, 'nA/V')
-     move_to_edge('Cu', id_offset=0.090, id_harmonic=1)
-#enddef
-
-def move_to_ni():
-     "move to Ni K Edge"
-     set_i0amp_gain(5, 'nA/V')
-     move_to_edge('Ni','K')
-#enddef
-
-def move_to_zn():
-    "move to Zn K Edge"
-    set_i0amp_gain(5, 'nA/V')
-    move_to_edge('Zn', id_offset=0.098, id_harmonic=1)
+def move_to_fe():
+    "move to Fe K Edge"
+    set_i0amp_gain(10,  'nA/V')
+    move_to_edge('Fe', id_offset=0.070)
 #enddef
 
 
 def move_to_s():
     "move to S K Edge"
     set_i0amp_gain(5, 'nA/V')
+    mirrors_5mrad()
     move_to_edge('Ca', id_harmonic=1)
     move_to_edge('S', id_harmonic=1)
 #enddef
 
 def move_to_xrd():
     "move to 18 keV"
-    set_i0amp_gain(5, 'nA/V')
+    set_i0amp_gain(2, 'nA/V')
+    mirrors_4mrad()
     move_to_edge('Zr', id_harmonic=3, with_tilt=False)
     move_energy(18000)
     set_mono_tilt()
 #enddef
 
+def move_to_pb():
+    "move to 10 keV"
+    set_i0amp_gain(2, 'nA/V')
+    mirrors_4mrad()
+    move_to_edge('Pb', edge='L3', id_harmonic=3)
+#enddef
 
 def move_to_map():
-    "move to 10 keV"
-    set_i0amp_gain(5, 'nA/V')
-    move_to_edge('Zn', id_harmonic=1, id_offset=0.095, with_tilt=False)
-    move_energy(10000)
-    set_mono_tilt()
+    "move to generic mapping energy"
+    move_to_18keV()
 #enddef
-
-
-
-def move_to_xrd17500():
-    "move to 17.5 keV "
-    move_to_edge('Zr', id_offset=0.1800, id_harmonic=3, with_tilt=False)
-    set_i0amp_gain(2, 'nA/V')
-    move_energy(17500.0, id_offset=0.180)
-    set_mono_tilt()
-#enddef
+#

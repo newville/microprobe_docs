@@ -250,7 +250,7 @@ def xrd_bgr(prefix='13PEL1:'):
 
     Parameters:
         prefix (string): PV prefix for camera ['13MARCCD1:']
-    
+
     """
 
     caput(prefix+'cam1:ShutterMode', 1)

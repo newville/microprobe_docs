@@ -380,15 +380,14 @@ def set_mono_tilt(enable_fb_roll=True, enable_fb_pitch=None):
     caput('13IDA:QE2:ComputePosOffsetY.PROC', 1, wait=True)
     sleep(0.5)
     caput('13IDA:efast_pitch_pid.FBON', 0)
-    if enable_fb_pitch:
-        caput('13XRM:edb:use_fb', 1)
-        sleep(2.5)
-    #endif
-        if enable_fb_roll is None:
-            enable_fb_roll = caget('13IDE:En:Energy') < 3000.0
-        #endif
     if enable_fb_roll:
         caput('13IDA:efast_roll_pid.FBON', 1)
     #endif
+
+    if enable_fb_pitch:
+        sleep(3.0)
+        caput('13XRM:edb:use_fb', 1)
+    #endif
+
     print 'Set Mono tilt done (%.2f seconds)' % (systime()-t0)
 #enddef

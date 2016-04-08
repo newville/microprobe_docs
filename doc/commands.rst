@@ -110,6 +110,16 @@ a script.
 
 
 
+Collecting X-ray Fluorescen Spectra
+=======================================
+
+.. automodule:: xrf
+
+.. autofunction:: save_xrf
+
+This function is to save a single X-ray Fluorescence spectrum.
+
+
 Collecting X-ray Diffraction Images
 =======================================
 
@@ -119,6 +129,7 @@ Collecting X-ray Diffraction Images
 .. autofunction:: save_xrd_pe
 .. autofunction:: save_xrd_marccd
 .. autofunction:: xrd_bgr
+
 
 
 Controlling the X-ray beam intensity

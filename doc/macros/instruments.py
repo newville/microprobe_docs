@@ -1,126 +1,201 @@
-### from epics import caput, caget
+###
 
-def detector_distance(val, pvname='13IDE:m19.VAL', wait=True):
+def detector_distance(distance, wait=True):
     """
     Set Sample-detector distance in mm.
 
     Args:
-        val (float):  Sample-detector distance in mm.
-        pvname (string): Epics PV for sample-detector distance ['13IDE:m19.VAL']
+        distance (float):  Sample-detector distance in mm.
         wait (True or False):  whether to wait for move to complete [True]
 
     Example:
-        detector_distance(30)
+        detector_distance(60)
     """
-    print 'Moving Detector %s= %.3f (wait=%s)' % (pvname, val, wait)
-    return caput(pvname, val, wait=wait)
+    print('>Moving Detector %.1f (wait=%s)' % (distance, wait))
+    caput('13IDE:m19.VAL', distance, wait=wait)
+    _scandb.set_info('experiment_xrfdet_distance', "%.1f" % distance)
+#enddef
+
+def detectors_out():
+    detector_distance(75)
+    move_instrument('Eiger XRD Stages', 'out')
+#enddef
+
+def detectors_in():
+    detector_distance(68)
+    move_instrument('Eiger XRD Stages', '95 mm')
 #enddef
 
 
-def dxd(val, pvname='13IDE:m19.VAL', wait=True):
-    """
-    m
-    """
-    print 'This is DXD'
-    #     return caput(pvname, val, wait=wait)
-#enddef
-
-
-
-def set_SSA_hsize(val):
+def ssa_hsize(hsize):
    """
-   set SSA Horizontal beamsize, in microns.
+   set SSA Horizontal beamsize, in mm.
 
    Args:
-       val (float): SSA slit size in microns
+       hsize (float): SSA slit size in mm
 
    Example:
-      set_SSA_hsze(50)
+      ssa_hsze(0.050)
    """
-   caput('13IDA:m70.VAL', val/1000.0)
+   caput('13IDA:m70.VAL', hsize)
+   _scandb.set_info('experiment_ssa_hwid', "%.4f" % hsize)
 #enddef
 
 
-def move_instrument(inst_name, position_name, wait=False,
-                    prefix='13XRM:Inst:', timeout=60.0):
-    """move an Epics Instrument to a named position
+def bpm_foil(foilname):
+    """
+    select and move to BPM Foil by name
 
     Parameters:
-        inst_name (string): name of Epics Instrument
-        position_name (string):  name of position for the Instrument
-        wait (True or False): whether to wait for move to complete [False]
-        prefix (string): PV prefix used by Epics Instrument ['13XRM:Inst:']
-        timeout (float): time in seconds to give up waiting [60]
-
-    Examples:
-        move_instrument('Double H Mirror Stripes', 'platinum', wait=True)
+        name (string): name of foil. One of
+               'Open', 'Ti', 'Cr', 'Ni', 'Al', 'Au'
 
     Note:
-        requires a working Epics Instrument program to be running.
+       not case-sensitive.
+
+    Example:
+       bpm_foil('Ni')
 
     """
-    caput(prefix + 'InstName', inst_name)
-    caput(prefix + 'PosName', position_name)
-    sleep(0.25)
-    if (caget(prefix + 'InstOK') == 1 and
-        caget(prefix + 'PosOK') == 1):
-        caput(prefix + 'Move', 1)
-        if wait:
-            moving, t0 = 1, clock()
-            while moving:
-                sleep(0.25)
-                moving = ((1 == caget(prefix + 'Move')) or
-                          (clock()-t0 > timeout))
-            #endwhile
-        #endif
-    #endif
-    sleep(1)
+    move_instrument('BPM Foil', foilname.title(), infoname='experiment_bpmfoil')
 #enddef
 
-def smallkb_stripes(stripe_name):
-    """move small KB mirrors to a metal stripe by name
+
+def dhmirror_stripe(stripe='silicon', wait=True):
+    """
+    move double horizontal beamline mirrors to a selected stripe
 
     Parameters:
-        stripe_name (string): name of stripe, one of 'S', 'R', or 'P'
+        stripe (string): name of stripe. One of
+            'silicon', 'rhodium', 'platinum' ['silicon']
+        wait (True or False): whether to wait for move
+            to complete before returning [True]
+    Note:
+        the first letter of the stripe ('s', 'r', 'p') is
+        sufficient.
+
+    Example:
+       dhmirror_stripe('rh')
+    """
+
+    stripes = {'s':'Si', 'r': 'rhodium', 'p': 'platinum'}
+    name = stripes.get(stripe.lower()[0], None)
+    if name is not None:
+        stripe_name = name
+    #endif
+    move_instrument('Double H Mirror Stripes', stripe_name, wait=wait,
+                    infoname='experiment_largekb_stripes')
+#enddef
+
+
+def kbmirror_stripe(stripe='silicon', wait=True):
+    """move KB mirrors to a selected stripe
+
+    Parameters:
+        stripe (string): name of stripe. One of
+            'silicon', 'rhodium', 'platinum' ['silicon']
+        wait (True or False): whether to wait for move
+            to complete before returning [True]
 
     Examples:
-        smallkb_stripes('silicon')
-
-    Note:
-        requires a working Epics Instrument program to be running.
-
+        kbmirror_stripe('silicon')
     """
-    stripes = {'s':'silicon stripes',
-               'r': 'rhodium stripes',
-               'p': 'platinum stripes'}
-    name = stripes.get(stripe_name.lower()[0], None)
-    if name is None:
-        print 'Unknown stripe name ', stripe_name
-    else:
-        move_instrument('Small KB Mirror Stripes', name, wait=True)
-    #endif
-#enddef
+    stripes = {'s':'silicon',  'r': 'rhodium',  'p': 'platinum'}
+    name = stripes.get(stripe.lower()[0], None)
+    if name is not None:
+        print("Moving KB Mirror Stripes ", name)
+        move_instrument('Small KB Mirror Stripes',
+                        name, wait=wait,
+                        infoname='experiment_smallkb_stripes')
 
-def mirrors_5mrad(stripe='si'):
-    move_instrument('Small KB Forces', '5mrad', wait=True)
-    smallkb_stripes(stripe)
-    move_instrument('Sample Microscope', '5mrad', wait=True)
-#enddef
-
-def mirrors_4mrad(stripe='rh'):
-    move_instrument('Small KB Forces', '4mrad', wait=True)
-    smallkb_stripes(stripe)
-    move_instrument('Sample Microscope', '4mrad', wait=True)
-#enddef
-
-def focus_2um():
-    """move small KB mirrors to 2 microns
+def focus(position='2um'):
+    """move small KB mirrors to named focus condition
     """
-    move_instrument('Small KB Forces', 'focus_2um', wait=True)
+    move_instrument('Small KBs Focus', position, wait=True,
+                    infoname='experiment_beamsize')
 #enddef
+
+
+
+def defocus():
+    """move small KB mirrors to 50x50 microns"""
+    move_instrument('Small KBs Focus', '50um', wait=True, infoname='experiment_beamsize')
 
 def focus_50um():
-    """move small KB mirrors to 50 microns
-    """
-    move_instrument('Small KB Forces', 'focus_50um', wait=True)
+    """move small KB mirrors to 50x50 microns"""
+    move_instrument('Small KBs Focus', '50x50um', wait=True, infoname='experiment_beamsize')
+
+def focus_25um():
+    """move small KB mirrors to 25 microns"""
+    move_instrument('Small KBs Focus', '25x25um', wait=True, infoname='experiment_beamsize')
+
+
+def focus_5um():
+    """move small KB mirrors to 5 microns"""
+    move_instrument('Small KBs Focus', '5x5um', wait=True, infoname='experiment_beamsize')
+
+def focus_1um():
+    """move small KB mirrors to 1 microns"""
+    move_instrument('Small KBs Focus', '1x1um', wait=True, infoname='experiment_beamsize')
+
+#
+# def focus_5um():
+#     """move small KB mirrors to 5 microns"""
+#     move_instrument('Small KBs Focus', '5um', wait=True, infoname='experiment_beamsize')
+# #enddef
+#
+# def focus_10um():
+#     """move small KB mirrors to 10 microns"""
+#     move_instrument('Small KBs Focus', '10um', wait=True, infoname='experiment_beamsize')
+# #enddef
+#
+# def focus_20um():
+#     """move small KB mirrors to 20 microns"""
+#     move_instrument('Small KBs Focus', '20um', wait=True, infoname='experiment_beamsize')
+# #enddef
+#
+# def focus_25um():
+#     """move small KB mirrors to 25 microns"""
+#     move_instrument('Small KBs Focus', '25um', wait=True, infoname='experiment_beamsize')
+# #enddef
+#
+# def focus_50um():
+#     """move small KB mirrors to 50 microns"""
+#     move_instrument('Small KBs Focus', '50um', wait=True, infoname='experiment_beamsize')
+# #enddef
+#
+
+def move_rotary1(value=None, wait=True):
+    "move rotary1 stage to value"
+    if value is not None:
+        caput('13IDE:m31.VAL', value, wait=wait)
+    #endif
+#enddef
+
+def move_rotary2(value=None, wait=True):
+    "move rotary2 stage to value"
+    if value is not None:
+        caput('13IDE:m32.VAL', value, wait=wait)
+    #endif
+#enddef
+
+def rotate_azimuth(target=None):
+   """
+   rotate sample azimuthal angle
+   """
+   direc = 0
+   if target is None: target = 1
+   if target < 0:
+       target = -target
+       direc = 1
+   #endif
+   if target > 0:
+      caput('rpi_2:Motor1Dir', direc)
+      sleep(0.5)
+
+      caput('rpi_2:Motor1Steps.VAL', target)
+      sleep(0.5)
+      caput('rpi_2:Motor1Move.VAL', 1)
+      # caput('rpi_2:Motor1Move.VAL', 0)
+   #endif
 #enddef

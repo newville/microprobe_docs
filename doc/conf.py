@@ -20,20 +20,17 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.mathjax',
               'sphinx.ext.ifconfig',
               'sphinx.ext.linkcode',
-              'sphinxcontrib.napoleon',
-              'sphinxcontrib.argdoc',
-              'numpydoc']
-
-extensions.extend(['fix_equation_ref', 'subfig', 'numfig', 'numsec'])
+              'sphinx.ext.napoleon']
 
 def linkcode_resolve(domain, info):
+    print("Linke Code ", domain, info)
     if domain != 'py':
         return None
     mname = info.get('module', '')
     if mname in (None, '', 'None'):
         return None
-    link = 'file:///T:/xas_user/scan_config/13ide/macros'
-    return '%s/%s.lar' % (link, mname)
+    link = 'file:///U:/xas_user/config/13ide/escan_macros'
+    return '%s/%s.py' % (link, mname)
 
 
 templates_path = ['_templates']
@@ -41,9 +38,9 @@ source_suffix = '.rst'
 
 master_doc = 'index'
 project = u'GSECARS Microprobe'
-copyright = u'2015, Matthew Newville'
+copyright = u'2025, Matthew Newville'
 
-release = 'October, 2015'
+release = 'March 2025'
 
 exclude_trees = ['_build', 'sphinx']
 
@@ -64,14 +61,7 @@ html_theme_path = ['sphinx/theme']
 html_theme = 'default'
 # html_theme = 'sphinxdoc'
 
-html_theme = 'nature'
-html_theme = 'sphinx_rtd_theme'
-# html_theme = 'alabaster'
-# html_theme = 'agogo'
-# html_theme_options = {'pagewidth':'85em', 'documentwidth':'60em', 'sidebarwidth': '25em',
-#                       # 'headercolor1': '#000080',
-#                       # 'headercolor2': '#0000A0',
-#                       }
+html_theme = 'bizstyle'
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -79,7 +69,7 @@ html_theme = 'sphinx_rtd_theme'
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
 #html_title = None
-html_title = 'The GSECARS X-ray Microprobe Beamline, APS 13-ID-E'
+html_title = 'GSECARS X-ray Microprobe Beamline, APS 13-ID-E'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 html_short_title = 'GSECARS X-ray Microprobe'

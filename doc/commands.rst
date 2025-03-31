@@ -10,7 +10,6 @@ collection system.  All of the commands described here can either be
 executed one at a time from the command line, or run in a script.
 
 
-
 Restarting the Scan Server
 =======================================
 
@@ -85,11 +84,6 @@ Several custom commands wrap these, to give experiment-specific commands.
 Since these can change for each experiment, please consult Matt or Tony
 before using them!
 
-.. autofunction::  move_to_s
-.. autofunction::  move_to_map
-
-.. autofunction::  move_to_xrd
-
 
 Running Scans
 =======================================
@@ -109,13 +103,12 @@ a script.
 .. autofunction:: grid_xrd
 
 
-
 Collecting X-ray Fluorescen Spectra
 =======================================
 
-.. automodule:: xrf
+    need to: automodule:: xrf_utils
 
-.. autofunction:: save_xrf
+    need to: autofunction save_xrf
 
 This function is to save a single X-ray Fluorescence spectrum.
 
@@ -123,12 +116,10 @@ This function is to save a single X-ray Fluorescence spectrum.
 Collecting X-ray Diffraction Images
 =======================================
 
-.. automodule:: xrd
+  need to:  automodule:: xrd
 
-.. autofunction:: save_xrd
-.. autofunction:: save_xrd_pe
-.. autofunction:: save_xrd_marccd
-.. autofunction:: xrd_bgr
+  need to: autofunction:: save_xrd
+  need to: autofunction:: xrd_bgr
 
 
 
@@ -158,9 +149,6 @@ Moving Other Beamline Instruments
    :synopsis:  instruments
 
 .. autofunction:: detector_distance
-.. autofunction:: set_SSA_hsize
-.. autofunction:: move_instrument
-
 
 
 The Pre-Scan Command

@@ -23,7 +23,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.napoleon']
 
 def linkcode_resolve(domain, info):
-    print("Linke Code ", domain, info)
+    print("Linked Code ", domain, info)
     if domain != 'py':
         return None
     mname = info.get('module', '')
@@ -40,7 +40,7 @@ master_doc = 'index'
 project = u'GSECARS Microprobe'
 copyright = u'2025, Matthew Newville'
 
-release = 'March 2025'
+release = 'September 28, 2025'
 
 exclude_trees = ['_build', 'sphinx']
 

@@ -4,7 +4,7 @@
 ##    pos_map
 
 import numpy as np
-
+import json
 
 def pos_multiscan(posname, scannames, number=1):
     """
@@ -65,7 +65,12 @@ def pos_scan(posname, scanname, datafile=None, extra=None, number=1, **kws):
            caput(pvname, val)
         else:
            print("## No known PV for ", key)
-    do_scan(scanname,  filename=datafile, nscans=number)
+    for i in range(number):
+        do_scan(scanname,  filename=datafile)
+        if check_scan_abort():
+            print('Aborting multiple scans in pos_scan')
+
+            return
 #enddef
 
 def pos_map(posname, scanname):
@@ -113,28 +118,42 @@ def _getPV(mname):
         known names include:
            'x' or 'finex' : sample fine X stage
            'y' or 'finey' : sample fine Y stage
-           'z'            : sample Z (focus) stage
+           'focus'        : sample Z (focus) stage
            'coarsex'      : sample coarse X stage
            'coarsey'      : sample coarse Y stage
            'energy'       : monochromator energy
     """
 
-    known = {'x':       '13XRM:m1.VAL',    'finex':   '13XRM:m1.VAL',
-             'y':       '13XRM:m4.VAL',    'finey':   '13XRM:m4.VAL',
-             'z':       '13XRM:m15.VAL',
-             'theta':   '13XRM:m3.VAL',
-             'coarsex': '13XRM:m5.VAL',
-             'coarsey': '13XRM:m6.VAL',
-             'coarse x': '13XRM:m5.VAL',
-             'coarse y': '13XRM:m6.VAL',
-             'xrfdet_x': '13IDE:m34.VAL',
-             'xrfdet_y': '13IDE:m4.VAL',
-             'xrfdet_z': '13IDE:m19.VAL',
-             'ssa_hwid': '13IDA:m70.VAL',
-             'energy':  '13IDE:En:Energy',
+    known = {'finex':   '13XRM:m1.VAL',
+             'finey':   '13XRM:m2.VAL',
+             'focus':   '13XRM:m11.VAL',
+             'theta':   '13XRM:m6.VAL',
+             'coarsex': '13XRM:m4.VAL',
+             'coarsey': '13XRM:m5.VAL',
              }
     return known.get(mname.lower(), None)
 #enddef
+
+def move_stage(motorname, value, relative=False, wait=True):
+    """move named stage to value
+
+    Parameters:
+        motorname (string): name of motor: 'finex', 'finey', 'coarsey', etc
+        value (float): value to move to
+        relative (bool): whether move is relative  [False]
+        wait (bool): whether to wait for move to complete [True]
+    """
+    motor = _getPV(motorname)
+    if motor is None:
+        print(f"Error: cannot find motor named '{motorname}'")
+        return
+
+    if relative:
+        value = value + caget(motor)
+    print("Move " , motor, value, wait)
+
+    caput(motor, value, wait=wait)
+
 
 def _scanloop(scanname, datafile, motorname, vals, number=1):
     """
@@ -213,9 +232,6 @@ def line_scan(scanname, posname, motor='x',
     datafile = posname
     _scanloop(scanname, datafile, motor, vals, number=number)
 #enddef
-
-def save_xrf(fname, t=100):
-    print("save xrf")
 
 
 def line_xrf(posname, motor='x',
@@ -949,4 +965,59 @@ def cu_grid(posname, xjump=0.200, yjump=0, energy1=8983.9, energy2=9200,
     if check_abort_pause(): return
     move_energy(energy2)
     close_shutter()
-#enddef
+
+
+def enscan(e0, start=-100, stop=100, step=1, dwelltime=1,
+           filename='enscan.001', is_relative=True, rois=None, elem='Cu',
+           edge='K', with_xrf=True, scanname=None):
+
+    sdict = {'type': 'xafs', 'scanmode': 'slew',
+             'energy_drive': '13IDE:En:Energy.VAL',
+             'energy_read': '13IDE:En:E_RBV.VAL',
+             'pos_settle_time': 0.05,
+             'det_settle_time': 0.01}
+
+    sdict['e0'] = e0
+    sdict['filename'] = filename
+    sdict['dwelltime'] = dwelltime
+    sdict['is_relative'] = is_relative
+
+    rois_used = ['OutputCounts']
+    if rois is not None:
+        for roi in rois:
+            if roi not in rois_used:
+                rois_used.append(roi)
+    sdict['rois'] = rois_used
+
+    if elem is not None:
+        sdict['elem'] = elem
+    if edge is not None:
+        sdict['edge'] = edge
+    npts  = int(1 + (stop - start + step*0.25 )/step)
+    sdict['regions'] = [[start, stop, npts, dwelltime, 'eV']]
+
+    # print('Scan Regions ', e0, sdict['regions'])
+
+    det_mcs =  {'nchan': 8.0, 'scaler': '13IDE:scaler1',
+                'label': 'mcs', 'prefix': '13IDE:MCS1:',
+                'kind': 'usbctr', 'notes': None}
+    det_xrf =  {'fileroot': '/cars4/data/xas_user/', 'nmcas': 7.0,
+                'nrois': 48.0, 'use_full': False, 'label': 'xspress3',
+                'prefix': '13QX7:', 'kind': 'xspress3', 'notes': None}
+
+    sdict['detectors'] = [det_mcs]
+    if with_xrf:
+        sdict['detectors'].append(det_xrf)
+
+    sdict['counters'] = [['QuadBPM_Sum', '13XRM:QE2:SumAll:MeanValue_RBV'],
+                         ['Mono_xtal1_temp', '13IDA:DMM1Ch12_calc'],
+                         ['Mono_xtal2_temp', '13IDA:DMM1Ch11_calc']]
+
+    if scanname is None:
+        scanname = '_enscan_'
+
+    sdef = _scandb.get_scandef(scanname)
+    if sdef is not None:
+        _scandb.del_scandef(scanname)
+    _scandb.add_scandef(scanname, text=json.dumps(sdict), type='xafs')
+    do_scan(scanname, filename=filename, nscans=1)

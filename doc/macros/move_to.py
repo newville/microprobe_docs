@@ -1,94 +1,64 @@
-def move_to_12kev():
-   "move to As K edge"
-   open_shutter()
-   set_i0amp_gain(100, 'nA/V')
-   set_i1amp_gain(500, 'nA/V')
-   move_to_edge('As', 'K')
-   detector_distance(120)
-   move_energy(12000)
-   autoset_i0amp_gain(take_offsets=False)
-   collect_offsets()
-
-def move_to_as():
-   "move to As K edge"
-   open_shutter()
-   set_i0amp_gain(100, 'nA/V')
-   set_i1amp_gain(500, 'nA/V')
-   detector_distance(120)
-   move_to_edge('As', 'K')
-   autoset_i0amp_gain(take_offsets=False)
-   collect_offsets()
-
-
-def move_to_19kev():
-   "move to Zr K edge"
-   open_shutter()
-   set_i0amp_gain(20, 'nA/V')
-   set_i1amp_gain(500, 'nA/V')
-   move_to_edge('Zr', 'K')
-   move_energy(19000)
-   detector_distance(120)
-   set_filter(thickness=200)
-   autoset_i0amp_gain(take_offsets=False)
-   collect_offsets()
-
-
-def move_to_cu():
-   "move to Cu K edge"
-   open_shutter()
-   set_i0amp_gain(100, 'nA/V')
-   set_i1amp_gain(500, 'nA/V')
-   move_to_edge('Cu', 'K')
-   autoset_i0amp_gain(take_offsets=False)
-   collect_offsets()
-
-def move_to_fe():
-   "move to Fe K edge"
-   open_shutter()
-   set_i0amp_gain(100, 'nA/V')
-   set_i1amp_gain(500, 'nA/V')
-   set_filter(thickness=300)
-   detector_distance(120)
-   move_to_edge('Fe', 'K')
-   autoset_i0amp_gain(take_offsets=False)
-   collect_offsets()
-
-def move_to_mn():
-   "move to Mn K edge"
-   open_shutter()
-   set_i0amp_gain(500, 'nA/V')
-   set_i1amp_gain(500, 'nA/V')
-   set_filter(thickness=0)
-   move_to_edge('Mn', 'K')
-   detector_distance(75)
-   autoset_i0amp_gain(take_offsets=False)
-   collect_offsets()
-
-def move_to_ti():
-   "move to Ti K edge"
-   open_shutter()
-   set_filter(thickness=0)
-   set_i0amp_gain(200, 'nA/V')
-   set_i1amp_gain(10, 'nA/V')
-   move_to_edge('Ti', 'K')
-   autoset_i0amp_gain(take_offsets=False)
-   collect_offsets()
-
-def move_to_eu():
-   "move to Eu L3 edge"
-   open_shutter()
-   set_filter(thickness=100)
-   set_i0amp_gain(100, 'nA/V')
-   set_i1amp_gain(20, 'nA/V')
-   move_to_edge('Eu', 'L3')
-   autoset_i0amp_gain(take_offsets=False)
-   collect_offsets()
-
-def move_to_au():
-   "move to Au L3 edge"
+def move_to_map():
+   "move to 7.5 keV for mapping"
    open_shutter()
    set_i0amp_gain(50, 'nA/V')
-   set_i1amp_gain(200, 'nA/V')
-   move_to_edge('Au', 'L3')
+   set_filter(thickness=0)
+   detector_distance(90, wait=False)
+   move_to_edge('Fe', 'K')
+   move_energy(7500)
+   fast_mono_tilt()
    autoset_i0amp_gain(take_offsets=False)
    collect_offsets()
+
+def move_to_ce():
+   "move to Ce L3 edge"
+   open_shutter()
+   set_i0amp_gain(50, 'nA/V')
+   set_filter(thickness=0)
+   detector_distance(90, wait=False)
+   move_to_edge('Ce', 'L3')
+   autoset_i0amp_gain(take_offsets=False)
+   collect_offsets()
+
+def move_to_9keV():
+   "move to 9 keV for mapping"
+   open_shutter()
+   set_i0amp_gain(20, 'nA/V')
+   set_filter(thickness=0)
+   detector_distance(90, wait=False)
+   move_to_edge('Cu', 'K')
+   move_energy(9000)
+   autoset_i0amp_gain(take_offsets=False)
+   collect_offsets()
+
+def filter0():
+   set_filter(0)
+   autoset_i0amp_gain(take_offsets=False)
+
+def filter50():
+   set_filter(50)
+   autoset_i0amp_gain(take_offsets=False)
+
+def filter100():
+   set_filter(100)
+   autoset_i0amp_gain(take_offsets=False)
+
+def filter150():
+   set_filter(150)
+   autoset_i0amp_gain(take_offsets=False)
+
+def filter200():
+   set_filter(200)
+   autoset_i0amp_gain(take_offsets=False)
+
+def filter250():
+   set_filter(250)
+   autoset_i0amp_gain(take_offsets=False)
+
+def filter300():
+   set_filter(300)
+   autoset_i0amp_gain(take_offsets=False)
+
+def filter350():
+   set_filter(350)
+   autoset_i0amp_gain(take_offsets=False)

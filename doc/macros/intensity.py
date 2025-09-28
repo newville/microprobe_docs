@@ -30,7 +30,6 @@ def feedback_on(roll=True, pitch=True):
         caput('13XRM:roll_pid.FBON', 1)
     #endif
 
-#enddef
 
 def stop_mcs(prefix='13IDE:'):
     caput(f'{prefix}scaler1.CONT', 0)
@@ -51,8 +50,6 @@ def scaler_mode(mode='autocount', count_time=1.0):
     count = 0
     while count < 5 and (0 != caget(f'{prefix}MCS1:Acquiring')):
         stop_mcs(prefix=prefix)
-        sleep(0.02)
-        caput(f'{prefix}scaler1.CONT', 1)
         sleep(0.02)
         caput(f'{prefix}scaler1.CONT', 0)
         sleep(0.02)
@@ -77,7 +74,7 @@ def scaler_mode(mode='autocount', count_time=1.0):
     val = 0
     if mode.lower().startswith('auto'): val = 1
 
-    caput(f'{prefix}scaler1.CONT', val)
+    # caput(f'{prefix}scaler1.CONT', val)
     caput(f'{prefix}scaler1.CNT',  val)
 #enddef
 
@@ -253,8 +250,7 @@ def set_i0amp_gain(sens, unit, offset=25):
 #enddef
 
 
-def autoset_gain(prefix='13IDE:A1', scaler='13IDE:I0_Volts', mcs='13IDE:MCS1:',
-                 offset=25, count=0):
+def autoset_gain(prefix='13IDE:A1', scaler='13IDE:I0_Volts', offset=25, count=0):
     """
     automatically set i0 gain to be in range
 
@@ -269,8 +265,7 @@ def autoset_gain(prefix='13IDE:A1', scaler='13IDE:I0_Volts', mcs='13IDE:MCS1:',
     # wait_for_shutters(hours=1)
     I0Max = 2.8
     I0Min = 0.7
-    i0_pv = '13IDE:I0_Volts'
-    i0val = caget(i0_pv)
+    i0val = caget(scaler)
     sleep(0.5)
     if i0val < I0Max and i0val > I0Min:
         return True
@@ -279,7 +274,7 @@ def autoset_gain(prefix='13IDE:A1', scaler='13IDE:I0_Volts', mcs='13IDE:MCS1:',
         unit = caget("%ssens_unit.VAL" % prefix)
         sens = caget("%ssens_num.VAL"  % prefix)
         sleep(0.5)
-        i0val = caget(i0_pv)
+        i0val = caget(scaler)
         if i0val > I0Max:
            sens = sens + 1
            if sens > 8:
@@ -317,7 +312,7 @@ def autoset_gain(prefix='13IDE:A1', scaler='13IDE:I0_Volts', mcs='13IDE:MCS1:',
         caput("%soff_u_put.VAL"   % prefix, offset)
         _scandb.set_info('needs_offset', 1)
         sleep(1.0)
-        i0val = caget(i0_pv)
+        i0val = caget(scaler)
         if (i0val > I0Min) and (i0val < I0Max):
             break
     scaler_mode(mode='autocount')
@@ -326,7 +321,7 @@ def autoset_gain(prefix='13IDE:A1', scaler='13IDE:I0_Volts', mcs='13IDE:MCS1:',
 
 def autoset_i0amp_gain(take_offsets=True):
     needs_offset = _scandb.get_info('needs_offset')
-    autoset_gain(prefix='13IDE:A1', offset=40)
+    autoset_gain(prefix='13IDE:A1', scaler='13IDE:USB1808:Ai1.VAL', offset=40)
     scaler_mode(mode='autocount')
     if take_offsets and _scandb.get_info('needs_offset',
                                          as_bool=True, default=False):
@@ -336,7 +331,7 @@ def autoset_i0amp_gain(take_offsets=True):
 #enddef
 
 def autoset_i1amp_gain(take_offsets=True):
-    autoset_gain(prefix='13IDE:A2', offset=40)
+    autoset_gain(prefix='13IDE:A2', scaler='13IDE:USB1808:Ai2.VAL', offset=40)
     scaler_mode(mode='autocount')
     if take_offsets and _scandb.get_info('needs_offset',
                                          as_bool=True, default=False):
@@ -365,7 +360,7 @@ def BPM_config(prefix='13XRM:QE2:', averaging_time=None, compute_offsets=False):
     return
 
 
-def find_max_intensity(drivepv, vals, readpv, minval=0.1, debug=False):
+def find_max_intensity(drivepv, vals, readpv, minval=0.03, debug=False):
     """
     find a max in an intensity while sweeping through an
     array of drive values,  around a current position, and
@@ -386,8 +381,9 @@ def find_max_intensity(drivepv, vals, readpv, minval=0.1, debug=False):
     """
     xorig = xbest = get_pv(drivepv).get()
     i1max = i1 = get_pv(readpv).get()
-    caput(drivepv, xorig+vals[0])
-
+    step = vals[1] - vals[0]
+    caput(drivepv, xorig+vals[0]-0.1, wait=True)
+    sleep(0.1)
     for _val in vals:
         val = xorig + _val
         caput(drivepv, val, wait=True)
@@ -405,6 +401,8 @@ def find_max_intensity(drivepv, vals, readpv, minval=0.1, debug=False):
         print(" i1max too small ", i1max, minval)
     #endif
     print(f" move {drivepv}  {xbest:.3f}")
+    caput(drivepv, xbest-step, wait=True)
+    sleep(0.05)
     caput(drivepv, xbest, wait=True)
     sleep(0.05)
     return xbest, i1max
@@ -462,10 +460,10 @@ def set_mono_tilt(enable_fb_roll=None, enable_fb_pitch=None):
 
     # find best tilt value with BPM sum
     tilt_best = caget(tilt_pv)
-    caput(tilt_pv, min(7, max(tilt_best, 3)))
+    caput(tilt_pv, min(9, max(tilt_best, 1)))
 
     try:
-        tilt_best, i1 = find_max_intensity(tilt_pv, linspace(-5, 5, 61), sum_pv)
+        tilt_best, i1 = find_max_intensity(tilt_pv, linspace(-7.5, 7.5, 51), sum_pv)
     except:
         pass
 
@@ -475,7 +473,7 @@ def set_mono_tilt(enable_fb_roll=None, enable_fb_pitch=None):
 
     # find best tilt value with IO
     try:
-        tilt_best, i1 = find_max_intensity(tilt_pv, linspace(-3, 3, 61), i0_pv)
+        tilt_best, i1 = find_max_intensity(tilt_pv, linspace(-2.5, 2.5, 51), i0_pv)
     except:
         pass
     #endtry
@@ -486,11 +484,11 @@ def set_mono_tilt(enable_fb_roll=None, enable_fb_pitch=None):
 
     # find best roll with I0
     if with_roll:
-        roll_best, i1 = find_max_intensity(roll_pv, linspace(-2.5, 2.5, 61), i0_pv)
+        roll_best, i1 = find_max_intensity(roll_pv, linspace(-3, 3, 61), i0_pv)
         if i1 < i0_minval:
             caput(roll_pv, 5.0, wait=True)
             sleep(0.25)
-            roll_best, i1 = find_max_intensity(roll_pv, linspace(-5., 5., 61), i0_pv)
+            roll_best, i1 = find_max_intensity(roll_pv, linspace(-5., 5., 101), i0_pv)
 
         print(f' roll broad: {roll_best:.3f}')
         if get_dbinfo('request_abort', as_bool=True):
@@ -529,7 +527,7 @@ def fast_mono_tilt():
     roll_fb_save =  caget('13XRM:roll_pid.FBON')
     energy = caget(energy_pv)
 
-    roll_ex, tilt_ex, npts = 1.5, 0.75, 31
+    roll_ex, tilt_ex, npts = 2.5, 1, 31
 
     caput('13XRM:pitch_pid.FBON', 0)
     caput('13XRM:roll_pid.FBON', 0)

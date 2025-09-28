@@ -1,38 +1,114 @@
-# from common import check_abort_pause
-# from instruments import bpm_foil, dhmirror_stripe
-# from intensity import set_mono_tilt, autoset_i0amp_gain
-
 IDPREF = 'S13ID:USID'
+import numpy as np
+from pathlib import Path
+from common import check_abort_pause
+from instruments import bpm_foil, dhmirror_stripe
+from intensity import set_mono_tilt, autoset_i0amp_gain
+
+def set_id_tracking(track=True):
+    """turn ID tracking on or off """
+    val = '1' if track else '0'
+    _scandb.set_info('qxafs_id_tracking', val)
+
+
+def set_gapscan_mode(mode=True):
+    """turn Continuous GapScan mode on or off """
+    val = '1' if mode else '0'
+    _scandb.set_info('qxafs_use_gapscan', val)
+
 
 def select_id_harmonic(energy):
     id_harmonic = 1
-    if energy >  8500:
-        id_harmonic = 3
+    if energy > 23000:
+        id_harmonic = 7
     elif energy > 15200:
         id_harmonic = 5
-
+    elif energy >  8500:
+        id_harmonic = 3
+    # print(f"ID Harmonic {energy=:.1f}, {id_harmonic=:.1f}")
     return id_harmonic
 
-def undulator_offset(energy, harmonic=1):
-    """undulator offset in energy given mono energy"""
-    if harmonic == 1:
-        id_energy = energy * 1.0010 - 41.0
-    elif harmonic == 3:
+def undulator_energy(energy, harmonic=1):
+    """undulator energy (in eV) given mono energy (in eV)"""
+    id_energy = energy * 1.0010 - 41.0
+    if harmonic == 3:
         id_energy = energy * 0.9944 - 75.0
-    elif harmonic == 3:
-        id_energy = energy * 0.9944 - 150.0
-    return 0.001*(id_energy - energy)
+    elif harmonic == 5:
+        id_energy = energy * 0.9944 - 145.0
+    elif harmonic == 7:
+        id_energy = energy - 330.0
+    # print(f"ID ENERGY {energy=:.1f}, {harmonic=:.1f}, {id_energy=:.1f}")
+    return id_energy
+
+def idenergy2idgap(energy, harmonic=1):
+    """convert ID energy (not mono!) in eV to ID gap in mm.
+    To convert mono energy to gap, apply the undulator offset first
+    idenergy = undulator_energy(Mono_En, harmonic=harmonic)
+    gap = idenergy2idgap(idenergy, harmonic=harmonic)
+    """
+    coefs = {1: [ 3.20e-15, -3.56e-11,  3.22e-8, 2.68e-3, 5.01],
+             3: [-4.96e-18,  1.34e-12, -5.30e-8, 1.40e-3, 3.42],
+             5: [-2.18e-19,  2.40e-13, -1.70e-8, 8.03e-4, 3.65],
+             7: [ 3.262e-17, -3.656e-12,  1.276e-7, -1.808e-3, 19.202],
+             }
+    return np.polyval(coefs[harmonic], energy)
 
 
-def move_energy(energy, id_offset=None, id_harmonic=None, wait=True):
+def disable_gapscan():
+    gap_arrlen = get_pv(f'{IDPREF}:GapArrayLenC.VAL')
+    gapscan_mode = get_pv(f'{IDPREF}:GapScanModeC.VAL')
+    if gap_arrlen.write_access:
+        gap_arrlen.put(0)
+    if gapscan_mode.write_access:
+        gapscan_mode.put(0)
+
+    sleep(1.0)
+
+def enable_gapscan(energy=None, e0=None, scanname=None, dwelltime=0.25):
+    disable_gapscan()
+    if e0 is not None and energy is not None:
+        energies = np.array(energy)
+    elif scanname is not None:
+        scan = _scandb.make_scan(scanname)
+        energies = np.array(scan.energies)
+        e0 = scan.e0
+        dwelltime = scan.dwelltime[0]
+    if e0 is None:
+        print('cannot build energy arrays')
+        return False
+
+    time_mono = np.arange(len(energies))*dwelltime
+    time_id = np.arange(10*int(1.0+time_mono.max()))*0.1
+    fine_energies = np.interp(time_id, time_mono, energies)
+
+    harmonic = select_id_harmonic(e0)
+    idenergy = undulator_energy(fine_energies, harmonic=harmonic)
+    gap_mm = idenergy2idgap(idenergy, harmonic=harmonic)
+
+    gap_um = (1000*gap_mm).astype('int')
+    print(f"scan gaps: start={gap_um[0]}, stop={gap_um[-1]}, {harmonic=}, {len(energies)}, {len(fine_energies)}")
+
+
+    gap_arrlen = get_pv(f'{IDPREF}:GapArrayLenC.VAL')
+    gap_array  = get_pv(f'{IDPREF}:GapArraySetC.VAL')
+    if gap_arrlen.write_access:
+        gap_arrlen.put(len(gap_um))
+        sleep(0.25)
+
+    if gap_array.write_access:
+        gap_array.put(gap_um)
+        sleep(0.25)
+
+    return True
+
+
+def move_energy(energy, id_harmonic=None, wait=True):
     """
     move energy to desired value, optionally specifying
     how to move the undulator.
 
     Parameters:
         energy (float):  Energy in eV
-        id_offset (float or None):  Undulator Offset. (Undulator - mono energy, in keV).
-             if None (default) the value will be set to 1.2% of mono energy (and in keV)
         id_harmonic (int or None): Undulator harmonic to use.
              if None (default) the value will not be changed
         wait (True or False): whether to wait for move to finish (default True).
@@ -52,23 +128,25 @@ def move_energy(energy, id_offset=None, id_harmonic=None, wait=True):
         id_harmonic_pv.put(id_harmonic)
     else:
         print("no write access for harmonic")
-    sleep(0.25)
+    sleep(0.1)
 
-    if id_offset is None:
-        id_offset = undulator_offset(energy, harmonic=id_harmonic)
-    caput('13IDE:En:id_off.VAL', id_offset)
-    sleep(0.050)
-    id_energy = 0.001*energy + id_offset
+    id_energy = undulator_energy(energy, harmonic=id_harmonic)
+    id_gap = idenergy2idgap(id_energy, harmonic=id_harmonic)
+
+    id_en_kev = 0.001*id_energy
+    # print("En ", energy, id_energy, id_en_kev)
+    caput('13IDE:En:id_off.VAL', id_en_kev-energy*0.001)
     id_energy_pv = get_pv(f'{IDPREF}:ScanEnergyC.VAL')
     # start undulator moving, if allowed
+    # print("ID ENERGY ", id_energy_pv.access, id_energy_pv)
     if 'write' in id_energy_pv.access:
-        # print("Put ID Energy ", id_energy_pv, id_energy)
+        # print("Put ID Energy ", id_energy_pv, id_en_kev)
         cur_id_en = id_energy_pv.get()
-        id_energy_pv.put(id_energy - 0.1*(id_energy - cur_id_en), wait=False)
-        sleep(0.1)
+        id_energy_pv.put(id_en_kev - 0.1*(id_en_kev - cur_id_en), wait=False)
+        sleep(0.2)
         id_gaptaper_pv.put(0.050)
-        sleep(0.1)
-        id_energy_pv.put(id_energy, wait=False)
+        sleep(0.2)
+        id_energy_pv.put(id_en_kev, wait=False)
     else:
         print("no write access for energy")
         print(id_energy_pv)
@@ -161,16 +239,13 @@ def use_si311(with_tilt=True):
     #endif
 #enddef
 
-def move_to_edge(element, edge='K', id_harmonic=None, id_offset=None,
+def move_to_edge(element, edge='K', id_harmonic=None,
                  stripe=None, foil=None, with_tilt=True, waittime=1.0): #
     """move energy to just above the edge of an element
 
     Parameters:
         element (str):  atomic symbol for element
         edge (str):  edge name ('K', 'L3', 'L2', 'L1', 'M')
-        id_offset (float or None):  Undulator Offset, the
-             undulator - mono energy in keV.
-             if None (default) the value will not be changed
         id_harmonic (int or None): Undulator harmonic to use.
              if None (default) the value will not be changed
         stripe (str or None): name of mirror coating for beamline mirrors
@@ -187,7 +262,10 @@ def move_to_edge(element, edge='K', id_harmonic=None, id_offset=None,
        move_to_edge('W', 'L3', stripe='Rh', with_tilt=False)
 
     """
-    if check_abort_pause(): return
+
+    if check_abort_pause():
+        print("abort pause ")
+        return
     edge_energy = xray_edge(element, edge)[0]
     if edge_energy > 36000 and edge == 'K':
         edge_energy = xray_edge(element, 'L3')[0]
@@ -215,8 +293,8 @@ def move_to_edge(element, edge='K', id_harmonic=None, id_offset=None,
     # guess mirror stripe
     if stripe is None:
         stripe = 'Si'
-        if energy >  9500:  stripe = 'rh'
-        if energy > 21000:  stripe = 'pt'
+        if energy >  9500:  stripe = 'Rh'
+        if energy > 20000:  stripe = 'Pt'
     #endif
 
     caput('13XRM:pitch_pid.FBON', 0)
@@ -225,8 +303,8 @@ def move_to_edge(element, edge='K', id_harmonic=None, id_offset=None,
     # first move mirrors without waiting
     dhmirror_stripe(stripe=stripe, wait=False)
 
-    id_scan_energy_pv = PV(f'{IDPREF}:ScanEnergyC.VAL')
-    id_curr_energy_pv = PV(f'{IDPREF}:EnergyM.VAL')
+    id_scan_energy_pv = get_pv(f'{IDPREF}:ScanEnergyC.VAL')
+    id_curr_energy_pv = get_pv(f'{IDPREF}:EnergyM.VAL')
     id_curr_energy = id_curr_energy_pv.get()
     id_scan_energy = id_scan_energy_pv.get()
     if id_scan_energy_pv.write_access:
@@ -237,7 +315,7 @@ def move_to_edge(element, edge='K', id_harmonic=None, id_offset=None,
     #endif
 
     # move the energy
-    move_energy(energy, id_offset=id_offset, id_harmonic=id_harmonic)
+    move_energy(energy, id_harmonic=id_harmonic)
 
     # make sure mirrors are finished moving
     # before setting mono tilt

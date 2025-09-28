@@ -26,6 +26,10 @@ def detectors_in():
     move_instrument('Eiger XRD Stages', '95 mm')
 #enddef
 
+def foe_slits(val='250'):
+    move_instrument('FOE Slits', val)
+#enddef
+
 
 def ssa_hsize(hsize):
    """
@@ -102,13 +106,17 @@ def kbmirror_stripe(stripe='silicon', wait=True):
     """
     stripes = {'s':'silicon',  'r': 'rhodium',  'p': 'platinum'}
     name = stripes.get(stripe.lower()[0], None)
+    hstripe_motor_gain = '13IDE:Galil2:m12_AMPGAIN_CMD'
+    caput(hstripe_motor_gain, 2)   # put vertical stripe to 2 Amp
     if name is not None:
         print("Moving KB Mirror Stripes ", name)
         move_instrument('Small KB Mirror Stripes',
                         name, wait=wait,
                         infoname='experiment_smallkb_stripes')
+    caput(hstripe_motor_gain, 1)   # put vertical stripe to 1 Amp
 
-def focus(position='2um'):
+
+def focus(position='2 um'):
     """move small KB mirrors to named focus condition
     """
     move_instrument('Small KBs Focus', position, wait=True,
@@ -119,50 +127,25 @@ def focus(position='2um'):
 
 def defocus():
     """move small KB mirrors to 50x50 microns"""
-    move_instrument('Small KBs Focus', '50um', wait=True, infoname='experiment_beamsize')
+    move_instrument('Small KBs Focus', '50 um', wait=True, infoname='experiment_beamsize')
 
 def focus_50um():
     """move small KB mirrors to 50x50 microns"""
-    move_instrument('Small KBs Focus', '50x50um', wait=True, infoname='experiment_beamsize')
+    move_instrument('Small KBs Focus', '50 um', wait=True, infoname='experiment_beamsize')
 
-def focus_25um():
+def focus_20um():
     """move small KB mirrors to 25 microns"""
-    move_instrument('Small KBs Focus', '25x25um', wait=True, infoname='experiment_beamsize')
+    move_instrument('Small KBs Focus', '20 um', wait=True, infoname='experiment_beamsize')
 
 
-def focus_5um():
-    """move small KB mirrors to 5 microns"""
-    move_instrument('Small KBs Focus', '5x5um', wait=True, infoname='experiment_beamsize')
+def focus_10um():
+    """move small KB mirrors to 10 microns"""
+    move_instrument('Small KBs Focus', '10 um', wait=True, infoname='experiment_beamsize')
 
-def focus_1um():
-    """move small KB mirrors to 1 microns"""
-    move_instrument('Small KBs Focus', '1x1um', wait=True, infoname='experiment_beamsize')
+def focus_2um():
+    """move small KB mirrors to 2 microns"""
+    move_instrument('Small KBs Focus', '2 um', wait=True, infoname='experiment_beamsize')
 
-#
-# def focus_5um():
-#     """move small KB mirrors to 5 microns"""
-#     move_instrument('Small KBs Focus', '5um', wait=True, infoname='experiment_beamsize')
-# #enddef
-#
-# def focus_10um():
-#     """move small KB mirrors to 10 microns"""
-#     move_instrument('Small KBs Focus', '10um', wait=True, infoname='experiment_beamsize')
-# #enddef
-#
-# def focus_20um():
-#     """move small KB mirrors to 20 microns"""
-#     move_instrument('Small KBs Focus', '20um', wait=True, infoname='experiment_beamsize')
-# #enddef
-#
-# def focus_25um():
-#     """move small KB mirrors to 25 microns"""
-#     move_instrument('Small KBs Focus', '25um', wait=True, infoname='experiment_beamsize')
-# #enddef
-#
-# def focus_50um():
-#     """move small KB mirrors to 50 microns"""
-#     move_instrument('Small KBs Focus', '50um', wait=True, infoname='experiment_beamsize')
-# #enddef
 #
 
 def move_rotary1(value=None, wait=True):
@@ -199,3 +182,21 @@ def rotate_azimuth(target=None):
       # caput('rpi_2:Motor1Move.VAL', 0)
    #endif
 #enddef
+
+
+def kb_forces(vcurve=None, vellip=None, hcurve=None, hellip=None):
+    """set small KB forces as curvature and ellipticity:
+
+    kb_forces(vcurve=8.5)
+    kb_forces(vcurve=8.5, vellip=-1.0)
+    kb_forces(hcurve=7.5, hellip=0.0)
+    """
+
+    if vcurve is not None:
+        caput('13IDE:pm1.VAL', vcurve)
+    if vellip is not None:
+        caput('13IDE:pm2.VAL', vellip)
+    if hcurve is not None:
+        caput('13IDE:pm5.VAL', hcurve)
+    if hellip is not None:
+        caput('13IDE:pm6.VAL', hellip)

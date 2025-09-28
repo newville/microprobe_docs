@@ -81,6 +81,25 @@ def expose(t=15):
         sleep(sleep_time)
     close_shutter()
 
+
+def expose_at(posname, t=5):
+    close_shutter()
+    move_samplestage(posname, wait=True)
+    sleep(1.0)
+    tsec = t*60
+    sleep_time = t*1.1
+    end_time= clock() + tsec
+    open_shutter()
+    while clock() < end_time:
+        sleep(sleep_time)
+
+    move_stage('finey', 0.25)
+    fast_mono_tilt()
+    close_shutter()
+
+
+
+
 def set_filter(thickness=0, set_i0=True):
     """set thickness of Al filters upstream of I0
 
@@ -90,6 +109,8 @@ def set_filter(thickness=0, set_i0=True):
        set_i0: whether to do `autset_i0amp_gain()` and
                `collect_offsets()` after setting filters [True]
     """
+    othick = thickness
+    _scandb.set_info('experiment_i0_filter', f"Al: {othick} microns")
     thickness = int(thickness/50)
     #    v1, v2, v3 = [int(a) for a in bin(thick)[2:][::-1]]
     v3 = v2 = v1 = 0
@@ -108,7 +129,6 @@ def set_filter(thickness=0, set_i0=True):
     elif thickness == 1:
         v1 = 1
     #endif
-    print("FILTER ", v1, v2, v3)
     caput('13IDE:USBCTR:Bo2.VAL', v1)
     caput('13IDE:USBCTR:Bo3.VAL', v2)
     caput('13IDE:USBCTR:Bo4.VAL', v3)

@@ -1,9 +1,9 @@
 IDPREF = 'S13ID:USID'
 import numpy as np
 from pathlib import Path
-from common import check_abort_pause
-from instruments import bpm_foil, dhmirror_stripe
-from intensity import set_mono_tilt, autoset_i0amp_gain
+from .common import check_abort_pause
+from .instruments import bpm_foil, dhmirror_stripe
+from .intensity import set_mono_tilt, autoset_i0amp_gain
 
 def set_id_tracking(track=True):
     """turn ID tracking on or off """

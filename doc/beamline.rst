@@ -1,3 +1,4 @@
+.. include:: substitutions.txt
 .. _Applied Nanotools:  https://www.appliednt.com/
 
 ..  _beamline-chapter:
@@ -8,7 +9,7 @@ General X-ray Microprobe Beamline Capabilities
 
 The X-ray microprobe at GSECARS uses an undulator X-ray source to
 provide fluxes in the range of :math:`10^{9}` to :math:`10^{13}` Hz in
-a spot size ranging from 0.5 to 50 :math:`\rm{\mu}m` in both
+a spot size ranging from 0.5 to 100 :math:`\rm{\mu}m` in both
 directions and an energy range of 2.4 to 27 keV.  This micro-scale
 beam can be used for X-ray Fluorescence maps, X-ray absorption
 spectroscopy, and X-ray diffraction.  The description of the X-ray
@@ -18,14 +19,14 @@ but to give guidance on using the beamline effectively.
 Spot Size
 ==============
 
-The typical X-ray spot size is :math:`1 \times 1` :math:`\rm{\mu}m`
-using Kirkpatrick-Baez (KB) mirrors just before the sample that
-separately focus in the horizontal and vertical directions. At this
-writing (September, 2025) with the recent upgrade to the APS source
-and improved X-ray optics, we have demonstrated beam sizes below 500
-nm in both directions, though absolute positional stability from
-beam-sample motion appears to be on a similar scale. Currently, a
-resolution target from `Applied Nanotools`_ with a pattern like this:
+The typical X-ray spot size is 1 x 1 |micron| using Kirkpatrick-Baez
+(KB) mirrors just before the sample that separately focus in the
+horizontal and vertical directions. At this writing (September, 2025)
+with the recent upgrade to the APS source and improved X-ray optics,
+we have demonstrated beam sizes below 500 nm in both directions,
+though absolute positional stability from beam-sample motion appears
+to be on a similar scale. Currently, a resolution target from `Applied
+Nanotools`_ with a pattern like this:
 
 .. image:: _images/xrftarget_ideal.png
     :width: 70%
@@ -49,10 +50,10 @@ investigation, but even a conservative estimate puts the beamsize at
 It is important to keep in mind that X-rays penetrate deeply into most
 materials, with intensities dropping exponentially.  For most
 geological materials :math:`1/e` sampling depths range from 5 to 250
-:math:`\rm{\mu}m`, with 50 :math:`\rm{\mu}m` being a good rule of
+|micron|, with 50 |micron| being a good rule of
 thumb. It takes 3 absorption lengths to absorb or scatter 95% of the
 X-rays.  For many samples, then, the volume illuminated with the
-X-rays will be a "beam" about :math:`0.5 \times 0.5 x 100 \rm{\mu}m`.
+X-rays will be a "beam" about 0.5 x 0.5 x 100 |micron|.
 
 
 Energy Range
@@ -111,6 +112,51 @@ means that our sensitivity is much lower for edges about 22 keV than
 we normally expect from our experiene below 20 keV.
 
 
+X-ray Optics Layout
+======================
+
+The microprobe beamline uses a 62-pole 33 mm undulator with the 6 GeV
+APS as the X-ray source.  The X-ray optics for this branch is
+comprised of
+
+
+ +--------------------+---------------+--------------------------------------------------+
+ |                    | distance from |                                                  |
+ | Component          | source (m)    | Description                                      |
+ +====================+===============+==================================================+
+ | APS undulator      |  0            | 33 mm period, 63 poles                           |
+ +--------------------+---------------+--------------------------------------------------+
+ | White Beam Slits   | 23            | typically 250x250 to 400x400 |micron|            |
+ +--------------------+---------------+--------------------------------------------------+
+ | Monochromator      | 25            | Double-Crystal, LN2-cooled                       |
+ |                    |               | Si(111) and Si(311) crystal sets                 |
+ +--------------------+---------------+--------------------------------------------------+
+ | Double Horizontal  | 27            | Si with Rh, Pt coatings, normally both at 3 mrad |
+ +--------------------+---------------+--------------------------------------------------+
+
+
+
+
+ +---+-----------------------+-----------------------------------------------------------+
+ | Si (111) monochromator crystal set                                                    |
+ +---+-----------------------+-----------------------------------------------------------+
+ |   | Energy Range (keV)    | 2.3 to 28                                                 |
+ +---+-----------------------+-----------------------------------------------------------+
+ |   | Energy Resolution     | 1.3x10\ :sup:`-4`, typical                                |
+ +---+-----------------------+-----------------------------------------------------------+
+ |   | Typical Flux (Hz)     | 5x10\ :sup:`10` (2.5 keV), 5x10\ :sup:`12` (10 keV)       |
+ +---+-----------------------+-----------------------------------------------------------+
+ | Si (311) monochromator crystal set                                                    |
+ +---+-----------------------+-----------------------------------------------------------+
+ |   | Energy Range (keV)    | 4.8 to 28                                                 |
+ +---+-----------------------+-----------------------------------------------------------+
+ |   | Energy Resolution     | 4x10\ :sup:`-5`, typical                                  |
+ +---+-----------------------+-----------------------------------------------------------+
+ |   | Typical Flux (Hz)     | 1x10\ :sup:`11` (7 keV), 2x10\ :sup:`12` (10 keV)         |
+ +---+-----------------------+-----------------------------------------------------------+
+
+
+
 Positional Stability
 ======================
 
@@ -122,17 +168,19 @@ instabilities, but overall the height of the beam is maintained to
 better than about 10 microns.
 
 The pitch and roll of the second monochromator crystal can be adjusted
-with either motors for larger motions or piezo-electric crystals.
+with either motors for larger motions or piezo-electric crystals. We
+find that we can set the pitch and roll motors and use only the
+piezo-electric crystals for most of the energy range.
 
-
-These motions move the beam vertically and horizontally.  The overall
-stability is very good -- typically a few microns at the X-ray Beam
-{osition Monitor (around 41 m from the source, just in front of the
-Secondary Source Aperture).  We *can* measure this and use a feedback
-loop to stabilize the vertical beam position by adjusting the pitch on
-the second crystal.  We normally do this only at low energies (high
-monochromator angles) we do use a "very slow feedback" process to keep
-the vertical beam position stable.
+Using either the piezo crystals or motors will move the beam
+vertically and horizontally.  The overall stability is very good --
+typically a few microns at the X-ray Beam {osition Monitor (around 41
+m from the source, just in front of the Secondary Source Aperture).
+We *can* measure this and use a feedback loop to stabilize the
+vertical beam position by adjusting the pitch on the second crystal.
+We normally do this only at low energies (high monochromator angles)
+we do use a "very slow feedback" process to keep the vertical beam
+position stable.
 
 The monochromator can also steer the beam horizontally (*roll*) if the
 two crystals are not parallel.  The effect is typically small, but the
@@ -217,20 +265,30 @@ lamp to give transmitted light.
 X-ray Fluorescence Detector
 ==============================
 
-The fluorescence detector used is a Vortex ME-4 silicon drift detector,
-using Xspress3 electronics from Quantum, Inc.  Each of the 4 detector
-elements can count up to about 3 MHz.  We normally try to run these at 1
-MHz or less to avoid saturation -- this can be corrected but becomes noisy
-above 3 MHz.  At low count rates (say, below 100 kHz), the spectral
-resolution is very good: as low as 135 eV at 5.9 keV, which is as good as
-one can do with a silicon detector.  The energy calibration is very good,
-and stays stable with count rate and over time.
+The energy-dispersive fluorescence detector is the workhorse of the
+X-ray microprobe.  We use a Mirion SXD-7 silicon drift detector with 7
+parallel detector elements, electronically cooled to 80 K to improve
+energy resolution. Xspress3 electronics from Quantum Detectors are
+used for pulse-processing, which uses a sophisticated method process
+individual X-ray events to allow count rates up to 4 MHz (per element)
+with the best resolution possible.  At low count rates (say, below 100
+kHz), the spectral resolution is very good: 125 to 130 eV at 5.9 keV,
+which is about ass good as one can do with a silicon detector.
+Deadtime corrections factors are saved with each spectrum and work
+well above 2 MHz. The energy calibration is very stable with count
+rate and does not drift over time.  We use 4096 bins of 10 eV for all
+measurements.
 
+For XRF mapping, we normally aim to have count rates limited to around
+1 MHz per element to avoid saturation, but the electronics recover
+very quickly if the beam hits a grain that does saturate the
+electronics.
 
 For XRF mapping, we slew the Sample Stage in the beam and trigger the
-detector to collect 4 full spectra per pixel.  We're able to collect full
-spectra in as short as 2 ms, though we typically use per-pixel dwell times
-of 10 to 50 ms.
+detector to collect 7 full spectra per pixel.  We generally collect
+spectra with per-pixel dwell times of 5 to 10 msec.  Accounting for
+overhead to write data and setup fly-scan trajectories, a 1000x1000
+pixel map at 5 msec per pixel takes about 90 minutes.
 
 
 X-ray Diffraction Camera(s)

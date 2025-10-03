@@ -19,18 +19,17 @@ sys.path.insert(0, 'macros')
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.mathjax',
               'sphinx.ext.ifconfig',
-              'sphinx.ext.linkcode',
               'sphinx.ext.napoleon']
 
-def linkcode_resolve(domain, info):
-    print("Linked Code ", domain, info)
-    if domain != 'py':
-        return None
-    mname = info.get('module', '')
-    if mname in (None, '', 'None'):
-        return None
-    link = 'file:///U:/xas_user/config/13ide/escan_macros'
-    return '%s/%s.py' % (link, mname)
+# def linkcode_resolve(domain, info):
+#     print("Linked Code ", domain, info)
+#     if domain != 'py':
+#         return None
+#     mname = info.get('module', '')
+#     if mname in (None, '', 'None'):
+#         return None
+#     link = 'macros'
+#     return '%s/%s.py' % (link, mname)
 
 
 templates_path = ['_templates']

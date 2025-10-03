@@ -4,56 +4,111 @@
 Available Commands
 =========================
 
-Being able to script data collection by writing a ``macro`` or **script**
-of commands to execute is an important part of the EpicsScan data
-collection system.  All of the commands described here can either be
-executed one at a time from the command line, or run in a script.
+Being able to script data collection by writing a ``macro`` or
+**script** of commands to execute is an important part of the
+EpicsScan data collection system.  EpicsScan provides a **macro
+interpreter** which uses a subset of the Python language.  There are
+some restrictions on what can be done in the this macro interpreter,
+but it is plenty powerful enough for data collection scripts.  All of
+the commands described here can either be executed one at a time from
+the command line, or run in a script.
+
+
+Core Functions
+=======================================
+
+These functions are built into the macro interpreter and alwayas
+available.  Most of these will not be useful as high-level macros
+themselves, but can be used with macros to control data collection.
+
+.. module:: epicsscan.macros_init
+
+Epics Channel Access Functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These provide access to Epics Channel Access (CA) variables used in
+the control system.
+
+.. autofunction:: caget
+.. autofunction:: caput
+.. autofunction:: get_pv
+
+access to the EpicsScan Postgresql Database
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These functions provide access the data in the PostgresQL database
+used by the data collection system:
+
+
+.. autofunction:: get_dbinfo
+.. autofunction:: set_dbinfo
+.. autofunction:: scan_from_db
+.. autofunction:: check_scan_abort
+.. autofunction:: move_instrument
+.. autofunction:: move_samplestage
+
+.. attribute:: _scandb
+               direct acces to the EpicsScan database.
+
+core scanning commands
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These are the basic commands to request a data collection scan
+
+.. autofunction:: do_scan
+.. autofunction:: do_slewscan
+
+
+Xray Data functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+These functions (from `xraydb`) provide X-ray data that may be useful
+in macros:
+
+.. autofunction:: atomic_mass
+.. autofunction:: atomic_name
+.. autofunction:: atomic_number
+.. autofunction:: atomic_symbol
+.. autofunction:: chemparse
+.. autofunction:: etok
+.. autofunction:: ktoe
+.. autofunction:: get_material
+.. autofunction:: guess_edge
+.. autofunction:: ionchamber_fluxes
+.. autofunction:: material_mu
+.. autofunction:: material_mu_components
+.. autofunction:: mirror_reflectivity
+.. autofunction:: mu_elam
+.. autofunction:: xray_edge
+.. autofunction:: xray_edges
+.. autofunction:: xray_line
+.. autofunction:: xray_lines
+
+
+.. autofunction:: clock
+.. autofunction:: sleep
+.. autofunction:: as_ndarray
+.. autofunction:: index_nearest
+.. autofunction:: index_of
 
 
 Restarting the Scan Server
 =======================================
 
+.. module:: escan_macros.common
+
 Two commands are available for restarting the Scan Server process are
 reloading all macro definition.
 
-.. module:: common
-   :synopsis: common commands
 
 .. autofunction:: restart_server
 
 .. function:: load_macros()
+              re-read and re-load all macros
 
    Reloads all Macro definitions.   This is necessary if you change a macro.
    Note that closing and reopening the `Macro Window` will do this.
 
-
-Moving the Sample Stage
-=======================================
-
-Several commands allow you to move the sample to a desired location.
-
-.. module:: samplestage
-   :synopsis: commands for moving the sample
-
-.. autofunction:: move_samplestage
-
-.. autofunction:: move_fine
-
-Getting Positions from OSCAR to the Sample Stage
-======================================================
-
-These commands help move coordinates saved with OSCAR (the off-line
-microscope) to the Samplestage.
-
-
-Transferring coordinates from OSCAR to the Sample Stage
-================================================================
-
-.. module:: uscope
-
-.. autofunction:: uscope2sample
-
-.. autofunction:: make_uscope_rotation
 
 
 Moving the Monochromator Energy
@@ -65,14 +120,15 @@ a particular edge which may also set other settings (Ion Chamber gains,
 mirror stripes) and also do an automated search-and-optimization of the
 beam intensity.
 
-.. module:: energy
-   :synopsis: commands for moving energy
+.. module:: escan_macros.energy
+
+   :synopsis: commands  moving energy
 
 .. autofunction:: move_energy
 
 .. autofunction:: move_to_edge
 
-.. autofunction:: mirror_stripe
+.. autofunction:: dhmirror_stripe
 
 .. autofunction:: bpm_foil
 
@@ -91,7 +147,7 @@ Running Scans
 There are several commands for running scans from the command line or from
 a script.
 
-.. module:: scanning
+.. module:: escan_macros.scanning
    :synopsis: commands for scanning
 
 .. autofunction:: pos_scan
@@ -106,7 +162,6 @@ a script.
 Collecting X-ray Fluorescen Spectra
 =======================================
 
-    need to: automodule:: xrf_utils
 
     need to: autofunction save_xrf
 
@@ -126,26 +181,26 @@ Collecting X-ray Diffraction Images
 Controlling the X-ray beam intensity
 ===========================================
 
-.. automodule:: intensity
+.. automodule::escan_macros.intensity
 
 .. autofunction:: set_mono_tilt
-.. autofunction:: optimize_id
 
-.. autofunction:: feedback_off
 .. autofunction:: collect_offsets
 .. autofunction:: set_SRSgain
-.. autofunction:: set_i1amp_gain
 .. autofunction:: set_i0amp_gain
-.. autofunction:: autoset_gain
-.. autofunction:: autoset_i0amp_gain
-.. autofunction:: autoset_i1amp_gain
-.. autofunction:: autoset_i2amp_gain
+.. autofunction:: set_i1amp_gain
+
+..
+ autofunction:: autoset_gain
+ autofunction:: autoset_i0amp_gain
+ autofunction:: autoset_i1amp_gain
+ autofunction:: autoset_i2amp_gain
 
 
 Moving Other Beamline Instruments
 ==============================================
 
-.. module:: instruments
+.. module:: escan_macros.instruments
    :synopsis:  instruments
 
 .. autofunction:: detector_distance
@@ -154,6 +209,6 @@ Moving Other Beamline Instruments
 The Pre-Scan Command
 =======================================
 
-.. module:: pre_scan
+.. module:: escan_macros.pre_scan
 
 .. autofunction:: pre_scan_command

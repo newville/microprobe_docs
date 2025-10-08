@@ -13,7 +13,7 @@ for operating the X-ray Microprobe.
 Last updated: |release|
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    overview
    beamline

@@ -14,6 +14,7 @@ the commands described here can either be executed one at a time from
 the command line, or run in a script.
 
 
+
 Core Functions
 =======================================
 
@@ -159,32 +160,24 @@ a script.
 .. autofunction:: grid_xrd
 
 
-Collecting X-ray Fluorescen Spectra
-=======================================
-
-
-    need to: autofunction save_xrf
-
-This function is to save a single X-ray Fluorescence spectrum.
-
-
 Collecting X-ray Diffraction Images
 =======================================
 
-  need to:  automodule:: xrd
+.. module:: escan_macros.xrd
+   :synopsis: commands for XRD
 
-  need to: autofunction:: save_xrd
-  need to: autofunction:: xrd_bgr
+.. autofunction:: save_xrd
+.. autofunction:: xrd_bgr
 
 
 
 Controlling the X-ray beam intensity
 ===========================================
 
-.. automodule::escan_macros.intensity
+.. module:: escan_macros.intensity
+   :synopsis: commands for controlling incident X-ray intensity
 
 .. autofunction:: set_mono_tilt
-
 .. autofunction:: collect_offsets
 .. autofunction:: set_SRSgain
 .. autofunction:: set_i0amp_gain
